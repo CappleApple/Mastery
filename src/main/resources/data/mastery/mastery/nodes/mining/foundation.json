@@ -1,0 +1,20 @@
+{
+  "tree": "mastery:mining",
+  "name": "Mining Practice",
+  "description": "Each rank adds 0.08 to player.block break speed.",
+  "icon": "minecraft:iron_pickaxe",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "minecraft:player.block_break_speed",
+      "amount": 0.08,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available"
+}

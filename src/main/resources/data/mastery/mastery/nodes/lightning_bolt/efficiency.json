@@ -1,0 +1,25 @@
+{
+  "tree": "mastery:lightning",
+  "name": "Lightning Bolt Efficiency",
+  "description": "Each enabled rank multiplies mana cost, cooldown and cast time by 0.9.",
+  "icon": "minecraft:lightning_rod",
+  "type": "modifier",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [
+    "mastery:lightning_bolt"
+  ],
+  "effects": [
+    {
+      "type": "mastery:spell_modifier",
+      "mana_multiplier": 0.9,
+      "cooldown_multiplier": 0.9,
+      "cast_time_multiplier": 0.9
+    }
+  ],
+  "visibility": "available",
+  "spell": "irons_spellbooks:lightning_bolt",
+  "modifier": "mastery:native_spell",
+  "toggleable": true
+}

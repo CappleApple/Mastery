@@ -1,0 +1,10 @@
+{
+  "items": [
+    "minecraft:mace"
+  ],
+  "item_tags": [
+    "minecraft:shovels"
+  ],
+  "element": "mastery:blunt",
+  "priority": 0
+}

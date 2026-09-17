@@ -1,0 +1,9 @@
+{
+  "name": "Undead",
+  "entities": [
+    "irons_spellbooks:necromancer"
+  ],
+  "entity_tags": [
+    "minecraft:undead"
+  ]
+}

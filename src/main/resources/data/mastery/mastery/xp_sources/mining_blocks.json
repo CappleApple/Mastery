@@ -1,0 +1,9 @@
+{
+  "tree": "mastery:mining",
+  "event": "block_break",
+  "amount": 2,
+  "scale": "none",
+  "condition": {
+    "block_tag": "mastery:mineable"
+  }
+}

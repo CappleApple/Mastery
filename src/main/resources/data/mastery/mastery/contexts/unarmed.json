@@ -1,0 +1,7 @@
+{
+  "name": "Unarmed",
+  "priority": 0,
+  "condition": {
+    "empty": true
+  }
+}

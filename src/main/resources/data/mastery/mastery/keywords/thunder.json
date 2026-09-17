@@ -1,0 +1,11 @@
+{
+  "name": "Thunder",
+  "max_stacks": 5,
+  "duration": 200,
+  "threshold": 5,
+  "consume_stacks": true,
+  "threshold_actions": [
+    {"type": "particles", "particle": "minecraft:electric_spark", "count": 24, "spread": 1},
+    {"type": "lightning", "target": "nearby", "radius": 8, "limit": 4, "amount": 6}
+  ]
+}

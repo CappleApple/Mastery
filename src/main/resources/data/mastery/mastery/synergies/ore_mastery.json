@@ -1,0 +1,36 @@
+{
+  "tree": "mastery:mining",
+  "name": "Ore Mastery",
+  "description": "A passive bonus earned through Mining and Smithing practice.",
+  "icon": "minecraft:anvil",
+  "type": "synergy",
+  "cost": 1,
+  "max_rank": 1,
+  "level": 3,
+  "visibility": "available",
+  "dependencies": [
+    {
+      "node": "mastery:mining/foundation",
+      "rank": 1
+    },
+    {
+      "node": "mastery:smithing/foundation",
+      "rank": 1
+    }
+  ],
+  "requirements": [
+    {
+      "type": "mastery:tree_level",
+      "tree": "mastery:smithing",
+      "level": 3
+    }
+  ],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "minecraft:player.block_break_speed",
+      "amount": 0.2,
+      "operation": "add_value"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "tree": "mastery:mobility",
+  "name": "Mobility Practice",
+  "description": "Each rank adds 0.003 to generic.movement speed.",
+  "icon": "minecraft:feather",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.003,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available"
+}

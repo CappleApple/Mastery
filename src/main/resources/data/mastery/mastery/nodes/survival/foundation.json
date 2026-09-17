@@ -1,0 +1,20 @@
+{
+  "tree": "mastery:survival",
+  "name": "Survival Practice",
+  "description": "Each rank adds 1 to generic.max health.",
+  "icon": "minecraft:campfire",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "minecraft:generic.max_health",
+      "amount": 1,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available"
+}

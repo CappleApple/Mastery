@@ -1,0 +1,9 @@
+{
+  "name": "Thunder on hit",
+  "event": "hit",
+  "chance": 1,
+  "cooldown": 0,
+  "actions": [
+    {"type": "keyword", "target": "self", "keyword": "mastery:thunder", "stacks": 1}
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Bow",
+  "priority": 70,
+  "condition": {
+    "item_tag": "mastery:bows"
+  }
+}

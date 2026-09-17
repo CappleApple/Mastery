@@ -1,0 +1,69 @@
+{
+  "name": "Elemental Weapons",
+  "category": "mastery:editor",
+  "icon": "minecraft:enchanted_book",
+  "sortnum": 2,
+  "flag": "mastery_edit_mode",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Bonus and Conversion",
+      "text": "Aspect enchantments add elemental damage; conversion skills replace part of physical damage. Fire Aspect II adds fire damage equal to 20% of the weapon hit. A 20% fire conversion instead moves that fraction from physical to fire."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Nine Schools",
+      "text": "The bundled schools are fire, ice, lightning, holy, ender, blood, evocation, nature, and eldritch. Fire Aspect uses minecraft:fire_aspect. The other aspect enchantments use mastery:<school>_aspect. All have levels I-X and support melee weapons, bows, and crossbows. Only one Aspect can be applied to a weapon by default."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Fire Aspect",
+      "text": "Mastery replaces Fire Aspect ignition with elemental damage. It no longer sets the target on fire through its enchantment effect. This does not remove other mods or spells that ignite entities. The default bonus is 10% per enchantment level."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Attribute Skills",
+      "text": "Add mastery:attribute to a node. mastery:fire_weapon_damage adds a fire fraction to weapon hits. mastery:fire_conversion converts a physical fraction. mastery:fire_damage boosts fire damage from weapons and Iron spells. Each bundled school has matching attributes."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Overall Power",
+      "text": "mastery:elemental_damage increases every school, including native Iron spell damage. mastery:proc_chance adds to trigger/crafting proc probability. Use add_value for these fractional attributes. A value of 0.1 means ten percentage points."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Element Definitions",
+      "text": "Definitions > Elements links a school, enchantment, damage_per_level, weapon_attribute, conversion_attribute, and power_attribute. These are existing registry IDs. Data reload changes mappings and numbers; it does not create new registry attributes or enchantment types."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Conversion Totals",
+      "text": "When conversion fractions together exceed 100%, Mastery scales them proportionally to consume the whole physical portion. Bonus elemental damage remains additional. School defenses still govern the resulting school damage."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Beyond Spell Schools",
+      "text": "Elements can also name a registered damage_type instead of an Iron school. Mastery includes slashing, piercing, and blunt weapon damage. Definitions > Weapon types maps item IDs and tags to the type of unconverted physical damage, with priority resolving overlap."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Define Mob Groups",
+      "text": "Definitions > Mob types creates groups from entity IDs and entity tags. Add minecraft:player to include players. In an element, open damage_modifiers and add a field named for the mob-group definition ID. Its signed numeric value changes damage against that group."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Attunement Tradeoffs",
+      "text": "A modifier of 0.25 adds 25% damage; -0.25 reduces it 25%. Attunement multiplies both bonuses and penalties. At 20% attunement, those become +30% and -30%. Healing reverses the group relationship before applying attunement. Stronger specialization therefore strengthens both advantages and disadvantages."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Potency and Mitigation",
+      "text": "For skills with only an upside, use potency_attribute to increase positive group modifiers or mitigation_attribute to reduce negative ones. A mitigation value of 0.2 removes 20% of a penalty; 1 cancels it. These are separate from attunement, which strengthens both sides."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Overlapping Groups",
+      "text": "An entity can match several mob groups. Each matched group contributes its modifier, then the deltas add together. Matching several selectors inside one group counts that group once. Attunement applies first; potency or mitigation then adjusts the appropriate sign. Final damage cannot become negative."
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "tree": "mastery:smithing",
+  "event": "craft",
+  "amount": 4,
+  "scale": "amount",
+  "condition": {
+    "item_tag": "mastery:smithing_materials"
+  }
+}

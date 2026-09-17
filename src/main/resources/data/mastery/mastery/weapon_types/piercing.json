@@ -1,0 +1,12 @@
+{
+  "items": [
+    "minecraft:bow",
+    "minecraft:crossbow",
+    "minecraft:trident"
+  ],
+  "item_tags": [
+    "minecraft:pickaxes"
+  ],
+  "element": "mastery:piercing",
+  "priority": 0
+}

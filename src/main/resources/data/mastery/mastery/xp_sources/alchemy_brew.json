@@ -1,0 +1,7 @@
+{
+  "tree": "mastery:alchemy",
+  "event": "brew",
+  "amount": 5,
+  "scale": "none",
+  "condition": {}
+}

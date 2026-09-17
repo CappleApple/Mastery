@@ -1,0 +1,7 @@
+{
+  "tree": "mastery:survival",
+  "event": "consume",
+  "amount": 2,
+  "scale": "none",
+  "condition": {}
+}

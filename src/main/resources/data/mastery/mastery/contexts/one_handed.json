@@ -1,0 +1,7 @@
+{
+  "name": "One Handed",
+  "priority": 40,
+  "condition": {
+    "item_tag": "mastery:one_handed_weapons"
+  }
+}

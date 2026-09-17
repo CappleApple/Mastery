@@ -1,0 +1,15 @@
+{
+  "school": "irons_spellbooks:holy",
+  "enchantment": "mastery:holy_aspect",
+  "damage_per_level": 0.1,
+  "weapon_attribute": "mastery:holy_weapon_damage",
+  "conversion_attribute": "mastery:holy_conversion",
+  "power_attribute": "mastery:holy_damage",
+  "attunement_attribute": "mastery:holy_attunement",
+  "damage_modifiers": {
+    "mastery:undead": 0.25,
+    "mastery:players": -0.25
+  },
+  "potency_attribute": "mastery:holy_potency",
+  "mitigation_attribute": "mastery:holy_mitigation"
+}

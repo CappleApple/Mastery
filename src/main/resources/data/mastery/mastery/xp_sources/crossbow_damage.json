@@ -1,0 +1,11 @@
+{
+  "tree": "mastery:crossbow",
+  "event": "damage",
+  "amount": 1,
+  "scale": "damage",
+  "condition": {
+    "projectile": true,
+    "weapon_context": "mastery:crossbow",
+    "school": ""
+  }
+}

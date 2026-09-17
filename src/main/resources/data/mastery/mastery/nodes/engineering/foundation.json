@@ -1,0 +1,20 @@
+{
+  "tree": "mastery:engineering",
+  "name": "Engineering Practice",
+  "description": "Each rank adds 0.2 to player.block interaction range.",
+  "icon": "minecraft:redstone",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "minecraft:player.block_interaction_range",
+      "amount": 0.2,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available"
+}

@@ -1,0 +1,44 @@
+{
+  "name": "Actions and Targets",
+  "category": "mastery:editor",
+  "icon": "minecraft:target",
+  "sortnum": 5,
+  "flag": "mastery_edit_mode",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Target Selection",
+      "text": "self selects the owner. target selects the event victim or keyword bearer. nearby selects entities around center self or target. aim selects along the owner view. radius controls range; limit bounds affected entities."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Nearby Safety",
+      "text": "Nearby targeting defaults to excluding allies and players. Enable include_allies or include_players deliberately for buffs or PvP. Radius is at most 64 blocks; limit is at most 64 entities. A script can combine several differently targeted actions."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Damage and Healing",
+      "text": "damage specifies amount and an element or school. damage_fraction adds a fraction of the triggering hit. heal restores amount and defaults to holy scaling. per_rank scales with the owning skill rank; per_stack scales with keyword stacks. An explicit element can name a custom damage type."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Potion Effects",
+      "text": "effect uses a registered mob effect, duration in ticks, and amplifier. Amplifier 0 is level I; 1 is level II. Effects can target the player, victim, or selected nearby entities."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Spells",
+      "text": "spell chooses an installed Iron spell ID and level. It runs one native activation with target-facing aim, without spending mana, cooldown, or an unlock. The trigger supplies chance and cooldown. Native preconditions still apply; continuous spells are one activation, not a held channel."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Lightning and Particles",
+      "text": "lightning creates the strike presentation and controlled damage amount. particles uses a simple particle ID, count, spread, and speed. Examples are minecraft:flame, minecraft:explosion, and minecraft:electric_spark. Parameterized particles such as dust are not accepted."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Keyword Actions",
+      "text": "keyword adds stacks, optionally overriding duration. remove_keyword subtracts stacks; zero removes all. Applying a keyword refreshes its lifetime. Combine these with conditional actions to transform or consume effects."
+    }
+  ]
+}

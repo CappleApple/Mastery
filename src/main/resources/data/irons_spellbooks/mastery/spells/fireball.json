@@ -1,0 +1,22 @@
+{
+  "spell": "irons_spellbooks:fireball",
+  "tree": "mastery:fire",
+  "name": "Fireball",
+  "description": "Prepare Fireball in a spell slot.",
+  "icon": "minecraft:blaze_powder",
+  "contexts": [
+    "mastery:shield",
+    "mastery:two_handed",
+    "mastery:dual_wield",
+    "mastery:bow",
+    "mastery:crossbow",
+    "mastery:staff",
+    "mastery:throwing",
+    "mastery:one_handed",
+    "mastery:unarmed",
+    "mastery:spells"
+  ],
+  "modifier_slots": "default",
+  "level": 1,
+  "charge": "default"
+}

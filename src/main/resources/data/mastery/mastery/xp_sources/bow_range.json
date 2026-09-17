@@ -1,0 +1,12 @@
+{
+  "tree": "mastery:bow",
+  "event": "damage",
+  "amount": 2,
+  "scale": "none",
+  "condition": {
+    "projectile": true,
+    "weapon_context": "mastery:bow",
+    "school": "",
+    "min_distance": 20
+  }
+}

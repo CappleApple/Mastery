@@ -1,0 +1,34 @@
+{
+  "name": "Stacking Keywords",
+  "category": "mastery:editor",
+  "icon": "minecraft:blaze_powder",
+  "sortnum": 6,
+  "flag": "mastery_edit_mode",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Create a Keyword",
+      "text": "Definitions > Keywords opens a visual script with two action lanes: Periodic actions and Threshold actions. Settings includes name, max_stacks, duration, tick_interval, threshold, and consume_stacks. A keyword is custom state, not a registered potion effect."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Periodic Actions",
+      "text": "While applied, tick_actions runs every tick_interval ticks. Twenty ticks is one second. Use damage with per_stack enabled to make a stacking damage-over-time effect. Particles can show its ongoing presence."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Threshold Actions",
+      "text": "When stacks reach threshold, threshold_actions executes. consume_stacks removes exactly that threshold amount, keeping any remainder. Without consumption, it fires once when crossing from below and rearms after stacks fall below the threshold. A threshold cannot exceed max_stacks."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Stacks and Duration",
+      "text": "max_stacks caps accumulation. duration is a single lifetime refreshed by new application. The system bounds duration and interval to 72,000 ticks, and stacks to 1,024. Resetting a field uses its documented runtime default."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Reusable Templates",
+      "text": "mastery:scorch and mastery:thunder provide bundled examples, with matching mastery:scorch_on_hit and mastery:thunder_on_hit scripts. They remain inactive until a skill links a trigger. Copy their ideas into your own IDs for independent tuning."
+    }
+  ]
+}

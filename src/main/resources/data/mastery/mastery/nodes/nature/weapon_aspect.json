@@ -1,0 +1,23 @@
+{
+  "tree": "mastery:nature",
+  "name": "Nature Infusion",
+  "description": "Each rank adds 10% of base weapon damage as nature damage.",
+  "icon": "minecraft:book",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 5,
+  "level": 0,
+  "dependencies": [
+    "mastery:nature/foundation"
+  ],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "mastery:nature_weapon_damage",
+      "amount": 0.1,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available",
+  "toggleable": true
+}

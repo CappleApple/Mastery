@@ -1,0 +1,23 @@
+{
+  "name": "Iron's Spells and Mastery",
+  "category": "mastery:spellcasting",
+  "icon": "minecraft:blaze_powder",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Native Spellcasting",
+      "text": "Learn and improve existing spells from Iron's Spells 'n Spellbooks. Their mana costs, cooldowns, and casting rules still apply.$(br2)Spell ranks can extend how long you may charge. Fireball grows as you hold it; configured Firebolt upgrades add bursts. Release to cast after the minimum cast time."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Unlock and Prepare",
+      "text": "Hold a spell node to unlock it, then open Spells and assign it to an available slot. Choose hotbar sets or a shared quick-cast set.$(br2)Higher spell levels can unlock more modifier slots. Base spell-level upgrades and extra charge ranks are separate improvements."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Charging Spells",
+      "text": "The charge bar fills as a percentage, with marks at each charge level. Select an active node to read its spell description."
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Crossbow",
+  "priority": 70,
+  "condition": {
+    "item_tag": "mastery:crossbows"
+  }
+}

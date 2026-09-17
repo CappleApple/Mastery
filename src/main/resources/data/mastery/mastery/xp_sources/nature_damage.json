@@ -1,0 +1,9 @@
+{
+  "tree": "mastery:nature",
+  "event": "damage",
+  "amount": 1,
+  "scale": "damage",
+  "condition": {
+    "school": "irons_spellbooks:nature"
+  }
+}

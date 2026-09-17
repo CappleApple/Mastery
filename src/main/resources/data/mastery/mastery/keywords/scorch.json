@@ -1,0 +1,16 @@
+{
+  "name": "Scorch",
+  "max_stacks": 10,
+  "duration": 100,
+  "tick_interval": 20,
+  "tick_actions": [
+    {"type": "damage", "school": "irons_spellbooks:fire", "amount": 1, "per_stack": true},
+    {"type": "particles", "particle": "minecraft:flame", "count": 4, "spread": 0.25}
+  ],
+  "threshold": 5,
+  "consume_stacks": true,
+  "threshold_actions": [
+    {"type": "particles", "particle": "minecraft:explosion", "count": 8, "spread": 0.75},
+    {"type": "damage", "target": "nearby", "radius": 4, "limit": 16, "school": "irons_spellbooks:fire", "amount": 8}
+  ]
+}

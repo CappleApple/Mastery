@@ -1,0 +1,30 @@
+{
+  "name": "Separate Disciplines",
+  "category": "mastery:progression",
+  "icon": "minecraft:amethyst_shard",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Independent Points",
+      "text": "Each specialization has its own XP, level, and points. Fire Points pay for Fire nodes; Two-Handed Points pay for Two-Handed nodes.$(br2)Select a node to see its owning tree, cost, current rank, and prerequisites. Purchasing a rank spends points only from that tree."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Requirements",
+      "text": "Nodes can require earlier purchases, proficiency levels, world progression, or other conditions. Related specializations may unlock a synergy together.$(br2)The server checks purchases and casts. Read the explanation shown after a rejected action. Pack authors can change XP sources, point rules, prices, and caps."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Sealed branches",
+      "text": "Some branches require a Skill Book. Consume its matching book once to learn its hidden branch. It grants no rank, XP, or points. Learned books survive death; duplicates are not consumed.$(br2)Learning removes the branch's book gate. Nodes appear as their other prerequisites are met within a discovered specialization."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "mastery:skill_book",
+      "title": "Recognize a Skill Book",
+      "link_recipe": false,
+      "text": "Skill Books use a flat book cover stamped with the matching node's icon. The token chooses the icon even before you discover or purchase that node.$(br2)A book with an unknown token or unavailable icon keeps its plain cover. Resource packs can replace the book texture and icon artwork."
+    }
+  ]
+}

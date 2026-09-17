@@ -1,0 +1,11 @@
+{
+  "damage_type": "mastery:blunt",
+  "elemental": false,
+  "weapon_attribute": "mastery:blunt_weapon_damage",
+  "power_attribute": "mastery:blunt_damage",
+  "conversion_attribute": "mastery:blunt_conversion",
+  "attunement_attribute": "mastery:blunt_attunement",
+  "damage_modifiers": {},
+  "potency_attribute": "mastery:blunt_potency",
+  "mitigation_attribute": "mastery:blunt_mitigation"
+}

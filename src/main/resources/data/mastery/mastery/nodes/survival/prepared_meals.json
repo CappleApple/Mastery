@@ -1,0 +1,26 @@
+{
+  "tree": "mastery:survival",
+  "name": "Prepared Meals",
+  "description": "A 50% chance to improve crafted food. Also improves Needs Not Necessities meal buffs when installed.",
+  "icon": "minecraft:book",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [
+    "mastery:survival/foundation"
+  ],
+  "effects": [
+    {
+      "type": "mastery:crafting_food",
+      "nutrition_bonus": 0.1,
+      "saturation_bonus": 0.1,
+      "buff_duration_bonus": 0.1,
+      "meal_strength_bonus": 0.1,
+      "meal_duration_bonus": 0.1,
+      "chance": 0.5
+    }
+  ],
+  "visibility": "available",
+  "toggleable": true
+}

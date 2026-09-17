@@ -1,0 +1,36 @@
+{
+  "tree": "mastery:two_handed",
+  "name": "Spellblade Practice",
+  "description": "A passive bonus earned through Two-Handed and Fire practice.",
+  "icon": "minecraft:blaze_powder",
+  "type": "synergy",
+  "cost": 1,
+  "max_rank": 1,
+  "level": 3,
+  "visibility": "available",
+  "dependencies": [
+    {
+      "node": "mastery:two_handed/foundation",
+      "rank": 1
+    },
+    {
+      "node": "mastery:fire/foundation",
+      "rank": 1
+    }
+  ],
+  "requirements": [
+    {
+      "type": "mastery:tree_level",
+      "tree": "mastery:fire",
+      "level": 3
+    }
+  ],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 0.5,
+      "operation": "add_value"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Scorch on hit",
+  "event": "hit",
+  "chance": 0.25,
+  "cooldown": 0,
+  "actions": [
+    {"type": "keyword", "keyword": "mastery:scorch", "stacks": 1}
+  ]
+}

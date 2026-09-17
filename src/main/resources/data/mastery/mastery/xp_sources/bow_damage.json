@@ -1,0 +1,11 @@
+{
+  "tree": "mastery:bow",
+  "event": "damage",
+  "amount": 1,
+  "scale": "damage",
+  "condition": {
+    "projectile": true,
+    "weapon_context": "mastery:bow",
+    "school": ""
+  }
+}

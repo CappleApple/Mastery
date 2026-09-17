@@ -1,0 +1,20 @@
+{
+  "tree": "mastery:one_handed",
+  "name": "One-Handed Practice",
+  "description": "Each rank adds 0.5 to generic.attack damage.",
+  "icon": "minecraft:iron_sword",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 0.5,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available"
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Spell Sets and Hotkeys",
+  "category": "mastery:spellcasting",
+  "icon": "minecraft:tripwire_hook",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Your Active Keys",
+      "text": "Your active spell keys are:$(br2)$(k:mastery.active_slot_1) / $(k:mastery.active_slot_2) / $(k:mastery.active_slot_3) / $(k:mastery.active_slot_4)$(br2)Hotbar sets give each hotbar position its own spells. Selecting another position changes the active set. Quick-cast mode keeps one shared set."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Equipment Contexts",
+      "text": "Iron's spell HUD shows your active set. If you have more than four slots, use $(k:mastery.previous_spell_page) and $(k:mastery.next_spell_page) to switch pages.$(br2)Unassigned keys keep their usual actions. Empty assignment slots appear only while you have room for more spells."
+    }
+  ]
+}

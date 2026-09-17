@@ -1,0 +1,29 @@
+{
+  "name": "Recipe: Scorch Explosion",
+  "category": "mastery:editor",
+  "icon": "minecraft:fire_charge",
+  "sortnum": 7,
+  "flag": "mastery_edit_mode",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Start With Scorch",
+      "text": "Open mastery:scorch in Definitions > Keywords. Its periodic lane applies fire damage over time; its threshold lane creates the burst. Change duration, maximum stacks, and threshold to fit your pack."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Author the Damage",
+      "text": "Add damage to Periodic actions. Set school to irons_spellbooks:fire, amount to your per-stack damage, and per_stack true. Set tick_interval to 20 for once per second. Add flame particles if desired."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Author the Burst",
+      "text": "Switch to Threshold actions. Add damage with target nearby, center target, and your radius. Add explosion particles targeting target. Enable consume_stacks to spend the accumulated scorch. This burst is scripted damage, so it does not break terrain."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Connect a Skill",
+      "text": "Create a hit trigger with a keyword action targeting target and choosing mastery:scorch. Adjust its chance. Save the keyword before a trigger that references it, then save the node with a mastery:trigger effect. Existing bundled IDs already resolve."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Shield",
+  "priority": 100,
+  "condition": {
+    "blocking": true,
+    "or": [
+      {
+        "item_tag": "mastery:shields"
+      },
+      {
+        "offhand_tag": "mastery:shields"
+      }
+    ]
+  }
+}

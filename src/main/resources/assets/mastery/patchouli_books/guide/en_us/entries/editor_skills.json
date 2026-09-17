@@ -1,0 +1,49 @@
+{
+  "name": "Build a Skill Branch",
+  "category": "mastery:editor",
+  "icon": "minecraft:oak_sapling",
+  "sortnum": 1,
+  "flag": "mastery_edit_mode",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Tree First",
+      "text": "Add a tree, set its name and icon, then choose its growth section. xp_base and xp_growth set its XP curve. point_every is the levels between awards; points_per_award sets each award. Maximum level follows total node costs and the point schedule."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Attach a Node",
+      "text": "Right-click the tree and add a child. A node names its tree, costs points, and has max_rank purchases. Add effects to define behavior. Passive effects follow active skills; a mastery:trigger effect links a reusable combat script."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Dependencies",
+      "text": "Each dependency names a node and required rank. Top-level entries must all pass. Add AND and Add OR create nested groups. A two-rank prerequisite therefore uses rank 2; visual children are still visible in editor mode before players meet it."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Skill Book Gates",
+      "text": "Require Skill Book fills book_token with the node ID. Copy book command copies a matching mastery:skill_book give command. Share a token to open several branches with one book. Removing the gate leaves rank and other requirements unchanged."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Inherited Presentation",
+      "text": "Theme changes outer borders and connectors. Unlock controls hold direction, delay, and sounds. Appearance changes shape and name labels. Missing values inherit from parents/defaults; Reset removes an override. Spell charge and modifier-slot groups also inherit."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Reusable Effects",
+      "text": "Definitions > Effects creates a reusable effect. In a node effect entry, set ref to its ID. Inline effects also work. Attribute effects choose a real attribute, amount per rank, and an operation. Read percentage attributes as fractions: 0.2 means 20%."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Several Spells, One Skill",
+      "text": "One node can combine any number of mastery:unlock_spell rewards with attributes, triggers, and other passive effects. Each reward chooses a spell, starting level, and levels_per_rank after the first. Native spell bindings must already exist. The node details list every grant; Spell bindings lets you choose one."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Targeted Spell Upgrades",
+      "text": "An ordinary node can include multiple mastery:spell_modifier effects. Set spell to affect only that spell, or remove the field to affect all owned spells. Each matching effect composes spell levels, mana, cooldown, and cast time changes. Slot-equipped modifier nodes remain available as a separate choice."
+    }
+  ]
+}

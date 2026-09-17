@@ -1,0 +1,44 @@
+{
+  "name": "Save, Export, and Limits",
+  "category": "mastery:editor",
+  "icon": "minecraft:chest",
+  "sortnum": 10,
+  "flag": "mastery_edit_mode",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "World Overrides",
+      "text": "Accepted edits live in the world datapack mastery-editor under data/<namespace>/masteryedits/<kind>/<path>.json. These override ordinary mastery definitions. The server validates the resulting collection before replacing active data."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Reusable Data Paths",
+      "text": "Normal definitions use data/<namespace>/mastery/triggers/<path>.json, keywords/<path>.json, elements/<path>.json, and effects/<path>.json. A resource ID namespace:path maps to that namespace and file path. Export writes these paths for you."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Export a Pack",
+      "text": "Run /mastery export. Your client receives a ZIP in config/exports using its local timestamp. It contains accepted Mastery definitions and disabled overrides, not progression, personal layouts, unrelated recipes, or unsaved drafts."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Reload Boundaries",
+      "text": "Save and /mastery reload refresh Mastery definitions only. Changes to vanilla enchantment JSON, recipes, tags, or assets require their normal data/resource reloads. New registry attributes require code registration and a restart."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Reject Broken Links",
+      "text": "Save keywords before referring to them from triggers, and triggers before referring to them from skills. Deletion is rejected when another definition still refers to that ID. Remove the link first. The previous valid data remains active after a failed reload."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Practical Limits",
+      "text": "Each editor save must fit the 8,192-character payload. A script has at most 64 actions per list and 32 conditions. Keep repeated behavior in reusable triggers and keywords. Every script is validated against installed spell/effect IDs before use."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "A Test Checklist",
+      "text": "Test an ordinary hit, a kill, receiving damage, death, both sides of health thresholds, chance, cooldown, friendly targets, and reload. For crafting, test normal and shift-click outputs. Reset experimental skills when finished. The editor validates data; gameplay tests validate your design."
+    }
+  ]
+}

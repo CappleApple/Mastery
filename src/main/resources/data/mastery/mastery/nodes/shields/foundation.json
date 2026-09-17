@@ -1,0 +1,20 @@
+{
+  "tree": "mastery:shields",
+  "name": "Shields Practice",
+  "description": "Each rank adds 1 to generic.armor.",
+  "icon": "minecraft:shield",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "minecraft:generic.armor",
+      "amount": 1,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available"
+}

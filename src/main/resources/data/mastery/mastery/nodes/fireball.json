@@ -1,0 +1,14 @@
+{
+  "tree": "mastery:fire",
+  "name": "Fireball",
+  "description": "Unlock Fireball at level 1. Further ranks let you charge a larger fireball.",
+  "icon": "minecraft:blaze_powder",
+  "type": "active",
+  "cost": 1,
+  "max_rank": 5,
+  "level": 0,
+  "dependencies": [],
+  "effects": [],
+  "visibility": "available",
+  "spell": "irons_spellbooks:fireball"
+}

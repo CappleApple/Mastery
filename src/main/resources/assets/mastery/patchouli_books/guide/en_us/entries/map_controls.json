@@ -1,0 +1,33 @@
+{
+  "name": "Moving Through the Map",
+  "category": "mastery:skill_map",
+  "icon": "minecraft:map",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "One Canvas",
+      "text": "All discovered specializations share one canvas. Right-click a node to expand or collapse its branch. Left-click to read its details; hold left-click to buy a rank. Middle-click toggles an unlocked node.$(br2)Drag empty space to pan. Scroll to zoom. At distant zoom, nodes keep a minimum readable size and stay apart."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Find Your Skills",
+      "text": "Type a discovered skill in Search and press Enter to find it. Press $(k:mastery.focus_node) to center the selected node. Reset returns toward the roots.$(br2)Collapse closes branches. Invested opens developed branches. Details toggles the information panel. Spells opens your assignments."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Operator Editing",
+      "text": "Operators can run /mastery edit_mode true to edit world definitions. While editing, this guide reveals the Operator Workshop with step-by-step documentation for skills, elemental damage, combat scripts, keywords, and production bonuses.$(br2)/mastery edit_mode false returns to the player view."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Export Your Data",
+      "text": "Operators can run /mastery export to save the accepted Mastery definitions as a datapack ZIP in their client's config/exports folder.$(br2)The archive combines loaded definitions and accepted editor changes, including disabled resources. Its filename uses local time and preserves earlier exports. Exporting does not reload the server."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Skill Book Gates",
+      "text": "Require Skill Book gates a node and its children behind a consumable book. Copy book command gives you the matching book command.$(br2)The token can be edited to share one book across branches. Removing the gate keeps other prerequisites in place."
+    }
+  ]
+}

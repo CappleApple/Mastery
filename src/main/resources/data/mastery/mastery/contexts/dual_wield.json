@@ -1,0 +1,7 @@
+{
+  "name": "Dual Wield",
+  "priority": 75,
+  "condition": {
+    "dual_wield": true
+  }
+}

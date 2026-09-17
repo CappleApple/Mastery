@@ -1,0 +1,18 @@
+{
+  "name": "Your First Point",
+  "category": "mastery:progression",
+  "icon": "minecraft:experience_bottle",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Learn by Doing",
+      "text": "Using a discipline earns its own proficiency XP. Damage dealt with an Iron's school damage type trains that school. Casting alone and ordinary fire damage do not grant school XP. Weapon, gathering, and crafting actions follow their own rules.$(br2)Each proficiency level grants $(thing)one point$() in its discipline."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Reveal Your Tree",
+      "text": "A specialization appears on the map when you first receive one of its points. A class or server grant can reveal it too.$(br2)Press $(k:mastery.open) to open Mastery. Select the root to inspect its level, XP, and available points. Spending the last point keeps the tree discovered."
+    }
+  ]
+}

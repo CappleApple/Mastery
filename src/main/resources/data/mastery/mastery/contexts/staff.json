@@ -1,0 +1,7 @@
+{
+  "name": "Staff",
+  "priority": 60,
+  "condition": {
+    "item_tag": "irons_spellbooks:staff"
+  }
+}

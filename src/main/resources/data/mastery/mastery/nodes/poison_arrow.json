@@ -1,0 +1,14 @@
+{
+  "tree": "mastery:nature",
+  "name": "Poison Arrow",
+  "description": "Unlock Poison Arrow at level 1.",
+  "icon": "minecraft:oak_sapling",
+  "type": "active",
+  "cost": 1,
+  "max_rank": 1,
+  "level": 0,
+  "dependencies": [],
+  "effects": [],
+  "visibility": "available",
+  "spell": "irons_spellbooks:poison_arrow"
+}

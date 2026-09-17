@@ -1,0 +1,28 @@
+{
+  "name": "Ranks and Connections",
+  "category": "mastery:skill_map",
+  "icon": "minecraft:string",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Following a Branch",
+      "text": "Solid lines show prerequisites. Dashed lines connect synergies across specializations. Select a related node to brighten its connections.$(br2)When a prerequisite is collapsed, its connection follows the nearest visible ancestor. Expanding the branch reconnects the line to the actual prerequisite."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Building Together",
+      "text": "A synergy can require progress in several trees without merging their points. Its cost belongs to its owning tree.$(br2)Use the details panel to enable or disable purchased upgrades. Turning off a parent leaves its descendants available. Choose modifiers that fit your spell's current slot limit."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Purchase More Ranks",
+      "text": "Hold a node to buy another rank. After a short delay, it shakes and fills while the dings rise in pitch; a completion sound confirms the purchase.$(br2)Children appear once their required parent ranks and other prerequisites are met. Each new rank costs the listed points."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Shared Prerequisites",
+      "text": "Prerequisites can combine AND and OR groups. A tree stops leveling once its point awards cover all of its ranks."
+    }
+  ]
+}

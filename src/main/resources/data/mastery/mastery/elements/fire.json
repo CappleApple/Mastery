@@ -1,0 +1,12 @@
+{
+  "school": "irons_spellbooks:fire",
+  "enchantment": "minecraft:fire_aspect",
+  "damage_per_level": 0.1,
+  "weapon_attribute": "mastery:fire_weapon_damage",
+  "conversion_attribute": "mastery:fire_conversion",
+  "power_attribute": "mastery:fire_damage",
+  "attunement_attribute": "mastery:fire_attunement",
+  "damage_modifiers": {},
+  "potency_attribute": "mastery:fire_potency",
+  "mitigation_attribute": "mastery:fire_mitigation"
+}

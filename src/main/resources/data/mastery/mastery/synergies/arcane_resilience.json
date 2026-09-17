@@ -1,0 +1,36 @@
+{
+  "tree": "mastery:holy",
+  "name": "Arcane Resilience",
+  "description": "A passive bonus earned through Holy and Shields practice.",
+  "icon": "minecraft:shield",
+  "type": "synergy",
+  "cost": 1,
+  "max_rank": 1,
+  "level": 3,
+  "visibility": "available",
+  "dependencies": [
+    {
+      "node": "mastery:holy/foundation",
+      "rank": 1
+    },
+    {
+      "node": "mastery:shields/foundation",
+      "rank": 1
+    }
+  ],
+  "requirements": [
+    {
+      "type": "mastery:tree_level",
+      "tree": "mastery:shields",
+      "level": 3
+    }
+  ],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "irons_spellbooks:spell_resist",
+      "amount": 0.05,
+      "operation": "add_value"
+    }
+  ]
+}

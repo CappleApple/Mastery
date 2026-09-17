@@ -1,0 +1,39 @@
+{
+  "name": "Combat Trigger Scripts",
+  "category": "mastery:editor",
+  "icon": "minecraft:tripwire_hook",
+  "sortnum": 3,
+  "flag": "mastery_edit_mode",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Connected Cards",
+      "text": "Definitions > Triggers opens a visual script: WHEN selects the combat event, IF lists conditions, and THEN lists ordered actions. Add a condition or action from its type picker, then fill its settings. Click an existing card to edit it."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Choose an Event",
+      "text": "hit runs when you damage a target. kill runs when you kill one. hurt responds when you are hit. death responds when you are killed. The server evaluates scripts; client timing cannot grant a proc."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Chance and Cooldown",
+      "text": "Chance uses 0 to 1: 0.25 is 25%. mastery:proc_chance adds to it, clamped to a valid probability. Cooldown is ticks after a successful proc. Set 20 for one second. An action can also have its own chance."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Attach the Script",
+      "text": "A trigger definition does nothing until an active node includes an effect with type mastery:trigger and trigger set to its ID. Use Definitions > Nodes, open Effects, add an entry, choose the trigger type, and select your script."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Order Matters",
+      "text": "Actions execute top to bottom. ^ moves an action earlier; minus removes it. For example, apply a keyword before checking it in a later action. Conditions on an individual action allow interactions without gating the entire script."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Recursion Boundaries",
+      "text": "Script actions and proc projectiles do not recursively start hit/hurt chains. Their actual kills and deaths can run distinct kill/death triggers once. Proc casts and keyword actions are bounded. Build an explicit action sequence instead of relying on a hit proc to trigger itself."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "tree": "mastery:lightning",
+  "name": "Lightning Bolt Spell Level",
+  "description": "Each enabled rank adds one native casting level, composing with native spell-level bonuses.",
+  "icon": "minecraft:lightning_rod",
+  "type": "modifier",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [
+    "mastery:lightning_bolt"
+  ],
+  "effects": [
+    {
+      "type": "mastery:spell_modifier",
+      "spell_level": 1
+    }
+  ],
+  "visibility": "available",
+  "spell": "irons_spellbooks:lightning_bolt",
+  "modifier": "mastery:native_spell",
+  "toggleable": true
+}

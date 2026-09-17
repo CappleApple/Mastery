@@ -1,0 +1,20 @@
+{
+  "tree": "mastery:crossbow",
+  "name": "Crossbow Practice",
+  "description": "Each rank adds 5% arrow velocity.",
+  "icon": "minecraft:crossbow",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "apothic_attributes:arrow_velocity",
+      "amount": 0.05,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available"
+}

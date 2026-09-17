@@ -1,0 +1,20 @@
+{
+  "name": "Books and Capacity",
+  "category": "mastery:spellcasting",
+  "icon": "irons_spellbooks:copper_spell_book",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "irons_spellbooks:copper_spell_book",
+      "title": "Equip a Spellbook",
+      "link_recipe": false,
+      "text": "Equip a native spellbook to gain its spell capacity and normal equipment bonuses. Empty inscriptions still provide capacity.$(br2)Use Mastery's Spells screen to assign spells. Carrying an equipment-only book in your inventory is not enough."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Your Prepared Limit",
+      "text": "All assignments in your hotbar sets share your capacity, including the same spell assigned to several positions. Shared quick-cast mode has its own saved arrangement.$(br2)Books and purchased upgrades can add slots. Replace or clear an existing assignment when all slots are occupied."
+    }
+  ]
+}

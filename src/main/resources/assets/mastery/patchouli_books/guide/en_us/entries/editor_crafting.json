@@ -1,0 +1,44 @@
+{
+  "name": "Crafted Item Bonuses",
+  "category": "mastery:editor",
+  "icon": "minecraft:crafting_table",
+  "sortnum": 9,
+  "flag": "mastery_edit_mode",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Producer Skills",
+      "text": "Add crafting effects to the producer active skills. The result keeps its modifiers when given to someone else. Common item and item_tag filters restrict outputs; chance is the success probability and benefits from mastery:proc_chance."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Crafted Attributes",
+      "text": "mastery:crafting_attribute adds a persistent attribute modifier. Choose attribute, amount, operation, and slot. For a sword, minecraft:generic.attack_damage with slot mainhand adds damage while held. amount scales with active skill rank."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Crafted Food",
+      "text": "mastery:crafting_food can increase nutrition_bonus and saturation_bonus. Fractional values are percentage increases per rank: 0.25 means +25%. buff_strength_bonus and buff_duration_bonus alter built-in food effects."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Crafted Potions",
+      "text": "mastery:crafting_potion uses amplifier_bonus for additional strength tiers and duration_bonus for a duration fraction. added_effect can append a specific mob effect with added_duration and added_amplifier. Time fields use ticks."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Optional Meal Bonuses",
+      "text": "meal_strength_bonus and meal_duration_bonus affect Needs Not Necessities meal buffs when that mod is present. Mastery does not require Needs Not Necessities. Its absence leaves ordinary crafting bonuses available."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Placement Comfort",
+      "text": "mastery:placed_comfort grants additional comfort for blocks the skilled player places. Set amount, radius, comfort_type, and optional block or block_tag filters. Needs Not Necessities reads the extra provider only when installed."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Check Your Machine",
+      "text": "Ordinary player crafting and other supported player-owned production paths can identify the producer. Automated machines without a player cannot infer whose skills to use. Check the resulting item and production path in your pack."
+    }
+  ]
+}

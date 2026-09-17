@@ -1,0 +1,12 @@
+{
+  "school": "irons_spellbooks:lightning",
+  "enchantment": "mastery:lightning_aspect",
+  "damage_per_level": 0.1,
+  "weapon_attribute": "mastery:lightning_weapon_damage",
+  "conversion_attribute": "mastery:lightning_conversion",
+  "power_attribute": "mastery:lightning_damage",
+  "attunement_attribute": "mastery:lightning_attunement",
+  "damage_modifiers": {},
+  "potency_attribute": "mastery:lightning_potency",
+  "mitigation_attribute": "mastery:lightning_mitigation"
+}

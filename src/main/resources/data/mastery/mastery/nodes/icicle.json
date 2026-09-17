@@ -1,0 +1,14 @@
+{
+  "tree": "mastery:ice",
+  "name": "Icicle",
+  "description": "Unlock Icicle at level 1.",
+  "icon": "minecraft:snowball",
+  "type": "active",
+  "cost": 1,
+  "max_rank": 1,
+  "level": 0,
+  "dependencies": [],
+  "effects": [],
+  "visibility": "available",
+  "spell": "irons_spellbooks:icicle"
+}

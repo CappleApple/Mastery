@@ -1,0 +1,23 @@
+{
+  "tree": "mastery:evocation",
+  "name": "Opportune Casting",
+  "description": "Each rank adds two percentage points to combat and crafting proc chances.",
+  "icon": "minecraft:book",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 5,
+  "level": 0,
+  "dependencies": [
+    "mastery:evocation/foundation"
+  ],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "mastery:proc_chance",
+      "amount": 0.02,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available",
+  "toggleable": true
+}

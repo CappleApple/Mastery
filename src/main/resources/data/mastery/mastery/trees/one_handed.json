@@ -1,0 +1,58 @@
+{
+  "name": "One-Handed",
+  "description": "Practice one-handed to develop this proficiency.",
+  "icon": "minecraft:iron_sword",
+  "unlock": {
+    "fill_direction": "default",
+    "progress_sound": "default",
+    "complete_sound": "default"
+  },
+  "section": "west",
+  "xp_base": 25,
+  "xp_growth": 10,
+  "point_every": 1,
+  "tier_caps": [
+    {
+      "tier": 0,
+      "max_level": 20,
+      "max_rank": 5,
+      "max_depth": 4,
+      "modifier_slots": 2,
+      "active_capacity": 4
+    },
+    {
+      "tier": 1,
+      "max_level": 40,
+      "max_rank": 5,
+      "max_depth": 4,
+      "modifier_slots": 3,
+      "active_capacity": 6
+    },
+    {
+      "tier": 2,
+      "max_level": 60,
+      "max_rank": 5,
+      "max_depth": 4,
+      "modifier_slots": 4,
+      "active_capacity": 8
+    },
+    {
+      "tier": 3,
+      "max_level": 80,
+      "max_rank": 5,
+      "max_depth": 4,
+      "modifier_slots": 5,
+      "active_capacity": 10
+    },
+    {
+      "tier": 4,
+      "max_level": 100,
+      "max_rank": 5,
+      "max_depth": 4,
+      "modifier_slots": 6,
+      "active_capacity": 12
+    }
+  ],
+  "points_per_award": 1,
+  "effect_context": "mastery:one_handed"
+}

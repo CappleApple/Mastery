@@ -1,0 +1,9 @@
+{
+  "tree": "mastery:engineering",
+  "event": "craft",
+  "amount": 4,
+  "scale": "amount",
+  "condition": {
+    "item_tag": "mastery:engineering_items"
+  }
+}

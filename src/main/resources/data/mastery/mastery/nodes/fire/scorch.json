@@ -1,0 +1,21 @@
+{
+  "tree": "mastery:fire",
+  "name": "Scorch",
+  "description": "Hits can stack Scorch. Its damage over time builds toward a fiery burst.",
+  "icon": "minecraft:book",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 1,
+  "level": 0,
+  "dependencies": [
+    "mastery:fire/foundation"
+  ],
+  "effects": [
+    {
+      "type": "mastery:trigger",
+      "trigger": "mastery:scorch_on_hit"
+    }
+  ],
+  "visibility": "available",
+  "toggleable": true
+}

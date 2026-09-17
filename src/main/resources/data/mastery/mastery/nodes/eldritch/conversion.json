@@ -1,0 +1,23 @@
+{
+  "tree": "mastery:eldritch",
+  "name": "Eldritch Conversion",
+  "description": "Each rank replaces 20% of base weapon damage with eldritch damage.",
+  "icon": "minecraft:book",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 5,
+  "level": 0,
+  "dependencies": [
+    "mastery:eldritch/weapon_aspect"
+  ],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "mastery:eldritch_conversion",
+      "amount": 0.2,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available",
+  "toggleable": true
+}

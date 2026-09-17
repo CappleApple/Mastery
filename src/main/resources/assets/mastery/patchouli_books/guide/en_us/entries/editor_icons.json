@@ -1,0 +1,29 @@
+{
+  "name": "Icons and XP Outlines",
+  "category": "mastery:editor",
+  "icon": "minecraft:painting",
+  "sortnum": 11,
+  "flag": "mastery_edit_mode",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Browse Resources",
+      "text": "Open Icon in a tree or skill form, then Choose... . Textures previews PNGs under textures/ from loaded mods and resource packs. The type button cycles Textures, Items, and Spells. Search by namespace or path, select an entry, then Apply."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Texture IDs",
+      "text": "An image ID identifies a client PNG, such as mastery:textures/gui/sprites/graph/rune.png. Any loaded PNG ID can be typed directly, including paths outside textures/. The full image scales into the icon square. Item IDs render item models; native spell IDs resolve their icon."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Books Match Skills",
+      "text": "The skill map and matching Skill Book cover use the same icon resolution. Change a branch icon and its generic Skill Book updates. Every client needs the referenced resource pack. A datapack export includes IDs, not image assets."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Root XP Outline",
+      "text": "In normal player mode, each specialization root gains a clockwise XP outline from its top. It follows the selected circle, square, diamond, or hexagon. The filled length is current-level XP divided by the next level requirement; capped trees show a full outline."
+    }
+  ]
+}

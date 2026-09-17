@@ -1,0 +1,20 @@
+{
+  "tree": "mastery:nature",
+  "name": "Nature Practice",
+  "description": "Each rank adds 0.05 to nature spell power.",
+  "icon": "minecraft:oak_sapling",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "irons_spellbooks:nature_spell_power",
+      "amount": 0.05,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available"
+}

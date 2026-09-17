@@ -1,0 +1,7 @@
+{
+  "name": "Players",
+  "entities": [
+    "minecraft:player"
+  ],
+  "entity_tags": []
+}

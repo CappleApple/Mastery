@@ -1,0 +1,23 @@
+{
+  "tree": "mastery:evocation",
+  "name": "Elemental Power",
+  "description": "Each rank adds 5% elemental damage and typed healing across all schools.",
+  "icon": "minecraft:book",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 5,
+  "level": 0,
+  "dependencies": [
+    "mastery:evocation/foundation"
+  ],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "mastery:elemental_damage",
+      "amount": 0.05,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available",
+  "toggleable": true
+}

@@ -1,0 +1,25 @@
+{
+  "tree": "mastery:engineering",
+  "name": "Comfortable Construction",
+  "description": "Placed beds provide one extra comfort per rank within eight blocks when Needs Not Necessities is installed.",
+  "icon": "minecraft:book",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [
+    "mastery:engineering/foundation"
+  ],
+  "effects": [
+    {
+      "type": "mastery:placed_comfort",
+      "block_tag": "minecraft:beds",
+      "amount": 1,
+      "radius": 8,
+      "comfort_type": "mastery_crafted",
+      "chance": 1
+    }
+  ],
+  "visibility": "available",
+  "toggleable": true
+}

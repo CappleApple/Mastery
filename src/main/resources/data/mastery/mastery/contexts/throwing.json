@@ -1,0 +1,7 @@
+{
+  "name": "Throwing",
+  "priority": 50,
+  "condition": {
+    "item_tag": "mastery:throwing_weapons"
+  }
+}

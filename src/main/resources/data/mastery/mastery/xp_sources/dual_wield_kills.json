@@ -1,0 +1,11 @@
+{
+  "tree": "mastery:dual_wield",
+  "event": "kill",
+  "amount": 6,
+  "scale": "none",
+  "condition": {
+    "context": "mastery:dual_wield",
+    "projectile": false,
+    "school": ""
+  }
+}

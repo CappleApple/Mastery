@@ -1,0 +1,22 @@
+{
+  "spell": "irons_spellbooks:guiding_bolt",
+  "tree": "mastery:holy",
+  "name": "Guiding Bolt",
+  "description": "Prepare Guiding Bolt in a spell slot.",
+  "icon": "minecraft:golden_apple",
+  "contexts": [
+    "mastery:shield",
+    "mastery:two_handed",
+    "mastery:dual_wield",
+    "mastery:bow",
+    "mastery:crossbow",
+    "mastery:staff",
+    "mastery:throwing",
+    "mastery:one_handed",
+    "mastery:unarmed",
+    "mastery:spells"
+  ],
+  "modifier_slots": "default",
+  "level": 1,
+  "charge": "default"
+}

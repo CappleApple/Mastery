@@ -1,0 +1,23 @@
+{
+  "tree": "mastery:evocation",
+  "name": "Fang Strike Spell Level",
+  "description": "Each enabled rank adds one native casting level, composing with native spell-level bonuses.",
+  "icon": "minecraft:emerald",
+  "type": "modifier",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [
+    "mastery:fang_strike"
+  ],
+  "effects": [
+    {
+      "type": "mastery:spell_modifier",
+      "spell_level": 1
+    }
+  ],
+  "visibility": "available",
+  "spell": "irons_spellbooks:fang_strike",
+  "modifier": "mastery:native_spell",
+  "toggleable": true
+}

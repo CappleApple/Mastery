@@ -1,0 +1,11 @@
+{
+  "tree": "mastery:two_handed",
+  "event": "kill",
+  "amount": 6,
+  "scale": "none",
+  "condition": {
+    "context": "mastery:two_handed",
+    "projectile": false,
+    "school": ""
+  }
+}

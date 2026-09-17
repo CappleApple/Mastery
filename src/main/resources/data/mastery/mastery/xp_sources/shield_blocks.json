@@ -1,0 +1,7 @@
+{
+  "tree": "mastery:shields",
+  "event": "block",
+  "amount": 1,
+  "scale": "damage",
+  "condition": {}
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Two Handed",
+  "priority": 80,
+  "condition": {
+    "provider_only": true
+  }
+}

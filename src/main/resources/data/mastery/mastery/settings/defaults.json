@@ -1,0 +1,28 @@
+{
+  "unlock": {
+    "fill_direction": "vertical",
+    "progress_sound": "minecraft:entity.experience_orb.pickup",
+    "complete_sound": "minecraft:block.beacon.power_select",
+    "hold_delay_ms": 500
+  },
+  "theme": {
+    "inner_color": "#D3AD5B",
+    "outer_color": "#604522",
+    "gradient": 1
+  },
+  "modifier_slots": {
+    "base": 2,
+    "per_level": 1,
+    "max": 64
+  },
+  "charge": {
+    "ticks_per_level": 20,
+    "instant_base_ticks": 10,
+    "max_levels": 16,
+    "burst_interval_ticks": 3
+  },
+  "appearance": {
+    "shape": "circle",
+    "show_name": false
+  }
+}

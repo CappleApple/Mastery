@@ -1,0 +1,18 @@
+{
+  "name": "Arrange Your Branches",
+  "category": "mastery:skill_map",
+  "icon": "minecraft:compass",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Drag Any Node",
+      "text": "Drag a root or child node to place it. Descendants follow their parents. A shared child follows a nearby parent more strongly than a distant one.$(br2)Trees grow outward in eight directions from the map center. Moving a root into another direction rotates the branch, including your custom placements."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Your Layout",
+      "text": "Your root positions, child offsets, expanded branches, camera, and sector-line preference are remembered for this world and character.$(br2)The client options control animation speed and minimum node size. Distant zoom reduces spacing while keeping nodes apart; your arranged positions remain saved."
+    }
+  ]
+}

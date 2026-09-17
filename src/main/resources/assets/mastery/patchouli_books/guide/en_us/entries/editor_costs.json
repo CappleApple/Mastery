@@ -1,0 +1,39 @@
+{
+  "name": "Nested Purchase Costs",
+  "category": "mastery:editor",
+  "icon": "minecraft:emerald",
+  "sortnum": 12,
+  "flag": "mastery_edit_mode",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Cost Overrides",
+      "text": "Trees, nodes, and Defaults expose Costs. Reset inherits the parent rule. Inside Costs, Legacy point cost overrides a custom parent rule with the node numeric point cost. An override replaces the complete expression. Cost depth percent also inherits."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Three Currencies",
+      "text": "A points leaf spends specialization points. Choose Tree or leave it unset for this node tree. An experience leaf spends raw vanilla XP points, not levels. An item leaf spends an inventory item or item-tag quantity. Reset an unused selector."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Build an AND Group",
+      "text": "Open Costs and select Use AND. Open its All of group to add leaves. For a dual-discipline skill, add two points leaves and choose a different tree in each. Both currencies must be available."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Build an OR Group",
+      "text": "Use OR offers alternatives. Nested lists also provide Add AND and Add OR. For example, an AND of two tree costs can include an OR between vanilla XP and diamonds. The first affordable complete payment plan wins, without partial deductions."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Scale With Depth",
+      "text": "Cost depth percent adds a fraction per dependency depth: 0.1 adds 10% per step. Nodes without dependencies are depth zero; the longest dependency path wins. Each leaf rounds up. Its Depth percent overrides inherited scaling. Moving the map never changes costs."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Inspect and Test",
+      "text": "The node details show the resolved cost. Test a player who can afford only each alternative, one who can afford none, and repeated currencies in the same group. Server checks and deductions remain authoritative; editor access never bypasses validation."
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "tree": "mastery:lightning",
+  "name": "Gathering Thunder",
+  "description": "Hits can gather Thunder on you. Full stacks discharge at nearby enemies.",
+  "icon": "minecraft:book",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 1,
+  "level": 0,
+  "dependencies": [
+    "mastery:lightning/foundation"
+  ],
+  "effects": [
+    {
+      "type": "mastery:trigger",
+      "trigger": "mastery:thunder_on_hit"
+    }
+  ],
+  "visibility": "available",
+  "toggleable": true
+}

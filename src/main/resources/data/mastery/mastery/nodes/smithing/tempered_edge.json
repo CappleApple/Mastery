@@ -1,0 +1,25 @@
+{
+  "tree": "mastery:smithing",
+  "name": "Tempered Edge",
+  "description": "A 25% chance to add 10% weapon attack damage per rank to crafted swords.",
+  "icon": "minecraft:book",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [
+    "mastery:smithing/foundation"
+  ],
+  "effects": [
+    {
+      "type": "mastery:crafting_attribute",
+      "item_tag": "minecraft:swords",
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 0.1,
+      "operation": "add_multiplied_base",
+      "chance": 0.25
+    }
+  ],
+  "visibility": "available",
+  "toggleable": true
+}

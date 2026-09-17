@@ -1,0 +1,29 @@
+{
+  "name": "Recipe: Stored Thunder",
+  "category": "mastery:editor",
+  "icon": "minecraft:lightning_rod",
+  "sortnum": 8,
+  "flag": "mastery_edit_mode",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Store on the Player",
+      "text": "Create a hit trigger with a keyword action. Set target self and keyword mastery:thunder. Each successful proc adds stacks to the player instead of the enemy. Chance and cooldown determine how quickly it charges."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Spend the Charge",
+      "text": "In the thunder keyword Threshold actions, add lightning targeting nearby, center self. Set radius and limit, then amount. Enable consume_stacks so reaching the threshold spends charge before the next activation."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Add Presentation",
+      "text": "Add electric_spark particles on self and nearby targets. You can replace lightning with a native spell action, or add an effect action. Each action may have its own conditions and chance."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Test Both Sides",
+      "text": "Give the test player the owning skill and hit a hostile entity. Verify charge rate, target range, damage, allies, and stack consumption. Saving valid data checks syntax and references; it does not prove your intended balance."
+    }
+  ]
+}

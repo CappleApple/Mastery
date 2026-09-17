@@ -1,0 +1,11 @@
+{
+  "tree": "mastery:one_handed",
+  "event": "damage",
+  "amount": 1,
+  "scale": "damage",
+  "condition": {
+    "context": "mastery:one_handed",
+    "projectile": false,
+    "school": ""
+  }
+}

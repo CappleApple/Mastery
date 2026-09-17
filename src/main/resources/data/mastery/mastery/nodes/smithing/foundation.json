@@ -1,0 +1,20 @@
+{
+  "tree": "mastery:smithing",
+  "name": "Smithing Practice",
+  "description": "Each rank adds 0.5 to generic.armor toughness.",
+  "icon": "minecraft:anvil",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 3,
+  "level": 0,
+  "dependencies": [],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "minecraft:generic.armor_toughness",
+      "amount": 0.5,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available"
+}

@@ -1,0 +1,9 @@
+{
+  "tree": "mastery:mobility",
+  "event": "travel",
+  "amount": 1,
+  "scale": "distance",
+  "condition": {
+    "sprinting": true
+  }
+}

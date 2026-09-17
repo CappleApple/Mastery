@@ -1,0 +1,22 @@
+{
+  "spell": "irons_spellbooks:fang_strike",
+  "tree": "mastery:evocation",
+  "name": "Fang Strike",
+  "description": "Prepare Fang Strike in a spell slot.",
+  "icon": "minecraft:emerald",
+  "contexts": [
+    "mastery:shield",
+    "mastery:two_handed",
+    "mastery:dual_wield",
+    "mastery:bow",
+    "mastery:crossbow",
+    "mastery:staff",
+    "mastery:throwing",
+    "mastery:one_handed",
+    "mastery:unarmed",
+    "mastery:spells"
+  ],
+  "modifier_slots": "default",
+  "level": 1,
+  "charge": "default"
+}

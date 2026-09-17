@@ -1,0 +1,122 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.143'
+    id 'idea'
+}
+
+version = mod_version
+group = mod_group_id
+base { archivesName = mod_id }
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    withSourcesJar()
+}
+neoForge {
+    version = project.neo_version
+    parchment {
+        mappingsVersion = '2024.11.17'
+        minecraftVersion = '1.21.1'
+    }
+    runs {
+        configureEach { systemProperty 'neoforge.enabledGameTestNamespaces', 'mastery,minecraft' }
+        client {
+            client()
+            gameDirectory = project.layout.projectDirectory.dir('run-client')
+            programArguments.addAll '--width', '1100', '--height', '720'
+        }
+        clientSmoke {
+            client()
+            gameDirectory = project.layout.projectDirectory.dir('run-client-smoke')
+            programArguments.addAll '--width', '1100', '--height', '720', '--username', 'MasterySmoke'
+            systemProperty 'mastery.clientSmoke', 'true'
+            systemProperty 'mastery.clientSmokeOverview', providers.gradleProperty('masterySmokeOverview').getOrElse('false')
+            systemProperty 'mastery.clientSmokeOutput', project.layout.projectDirectory.dir('build/client-smoke').asFile.absolutePath
+        }
+        clientMechanicsSmoke {
+            client()
+            gameDirectory = project.layout.projectDirectory.dir('run-client-smoke')
+            programArguments.addAll '--width', '1100', '--height', '720', '--username', 'MasterySmoke'
+            systemProperty 'mastery.mechanicsSmoke', 'true'
+        }
+        clientFeatureSmoke {
+            client()
+            gameDirectory = project.layout.projectDirectory.dir('run-client-smoke')
+            programArguments.addAll '--width', '1100', '--height', '720', '--username', 'MasterySmoke'
+            systemProperty 'mastery.featureSmoke', 'true'
+        }
+        server {
+            server()
+            gameDirectory = project.layout.projectDirectory.dir('run-server')
+            programArgument '--nogui'
+        }
+        integrationServer {
+            server()
+            gameDirectory = project.layout.projectDirectory.dir('run-integration')
+            programArgument '--nogui'
+        }
+        optionalGameTestServer {
+            type = 'gameTestServer'
+            gameDirectory = project.layout.projectDirectory.dir('run-optional-gametest')
+        }
+        gameTestServer {
+            type = 'gameTestServer'
+            gameDirectory = project.layout.projectDirectory.dir('run-gametest')
+        }
+    }
+    mods {
+        mastery { sourceSet sourceSets.main }
+    }
+    unitTest {
+        enable()
+        testedMod = mods.mastery
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.shadowsoffire.dev/releases'; content { includeGroup 'dev.shadowsoffire' } }
+    maven { url = 'https://code.redspace.io/releases'; content { includeGroup 'io.redspace' } }
+    maven { url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'; content { includeGroup 'software.bernie.geckolib' } }
+    maven { url = 'https://maven.kosmx.dev/'; content { includeGroup 'dev.kosmx.player-anim' } }
+    maven { url = 'https://api.modrinth.com/maven'; content { includeGroup 'maven.modrinth' } }
+}
+dependencies {
+    implementation('dev.shadowsoffire:ApothicAttributes:1.21.1-2.10.1') { transitive = false }
+    implementation('dev.shadowsoffire:Placebo:1.21.1-9.9.2') { transitive = false }
+    implementation('io.redspace:irons_spellbooks:1.21.1-3.16.3') { transitive = false }
+    implementation('io.redspace:irons_lib:1.21.1-2.1.0') { transitive = false }
+    implementation('software.bernie.geckolib:geckolib-neoforge-1.21.1:4.7.5.1') { transitive = false }
+    implementation('dev.kosmx.player-anim:player-animation-lib-forge:2.0.1+1.21.1') { transitive = false }
+    implementation('maven.modrinth:cloth-config:izKINKFg') { transitive = false }
+    implementation('maven.modrinth:curios:yohfFbgD') { transitive = false }
+    implementation('maven.modrinth:better-combat:VhIOvcXP') { transitive = false }
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+tasks.named('test', Test) { useJUnitPlatform(); systemProperty 'mastery.projectDir', rootDir.absolutePath }
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+tasks.withType(Jar).configureEach { includeEmptyDirs = false }
+tasks.named('jar', Jar) { exclude 'com/cappleapple/mastery/gametest/**', 'com/cappleapple/mastery/client/validation/**' }
+def metadata = tasks.register('generateModMetadata', ProcessResources) {
+    inputs.properties([mod_version: mod_version, neo_version: neo_version])
+    expand([mod_version: mod_version, neo_version: neo_version])
+    from 'src/main/templates'
+    into layout.buildDirectory.dir('generated/modMetadata')
+}
+sourceSets.main.resources.srcDir metadata
+neoForge.ideSyncTask metadata
+
+
+
+def demoDatapack = tasks.register('demoDatapack', Zip) {
+    includeEmptyDirs = false
+    archiveFileName = "mastery-demo-${project.version}.zip"
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+    from('examples/demo')
+    from('src/main/resources/data') { into 'data' }
+}
+tasks.named('build') { dependsOn demoDatapack }

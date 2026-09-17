@@ -1,0 +1,23 @@
+{
+  "tree": "mastery:evocation",
+  "name": "Evocation Infusion",
+  "description": "Each rank adds 10% of base weapon damage as evocation damage.",
+  "icon": "minecraft:book",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 5,
+  "level": 0,
+  "dependencies": [
+    "mastery:evocation/foundation"
+  ],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "mastery:evocation_weapon_damage",
+      "amount": 0.1,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available",
+  "toggleable": true
+}

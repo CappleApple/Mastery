@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "mastery:ice_aspect",
+    "mastery:lightning_aspect",
+    "mastery:holy_aspect",
+    "mastery:ender_aspect",
+    "mastery:blood_aspect",
+    "mastery:evocation_aspect",
+    "mastery:nature_aspect",
+    "mastery:eldritch_aspect"
+  ]
+}

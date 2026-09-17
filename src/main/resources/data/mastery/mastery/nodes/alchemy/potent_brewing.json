@@ -1,0 +1,23 @@
+{
+  "tree": "mastery:alchemy",
+  "name": "Potent Brewing",
+  "description": "A 10% chance to add one potion tier and 10% duration per rank when extracting a brewed potion.",
+  "icon": "minecraft:book",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 2,
+  "level": 0,
+  "dependencies": [
+    "mastery:alchemy/foundation"
+  ],
+  "effects": [
+    {
+      "type": "mastery:crafting_potion",
+      "amplifier_bonus": 1,
+      "duration_bonus": 0.1,
+      "chance": 0.1
+    }
+  ],
+  "visibility": "available",
+  "toggleable": true
+}

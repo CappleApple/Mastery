@@ -1,0 +1,39 @@
+{
+  "name": "Start Editing",
+  "category": "mastery:editor",
+  "icon": "minecraft:writable_book",
+  "sortnum": 0,
+  "flag": "mastery_edit_mode",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Enable the Workshop",
+      "text": "Run /mastery edit_mode true as an operator, then press $(k:mastery.open). Editing is private to you; saved definitions affect the whole world. This workshop appears only while the server confirms your edit mode. Turning editing off hides it again."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "The Editor Map",
+      "text": "Every tree expands, including undiscovered and book-gated skills. Right-click a tree or skill to edit, add a child, or delete it. Pan, zoom, Fit map, and Sectors remain available. Editor placement ignores personal node dragging."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Definition Library",
+      "text": "Choose Definitions on the map to browse trees, nodes, spells, settings, XP sources, reusable requirements/effects, contexts, elements, triggers, and keywords. Choose the type, search IDs, and use New definition. Use a namespaced ID such as mastery:scorch_on_hit."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Edit Without JSON",
+      "text": "Visual forms open nested settings and lists. Choose... offers known registry IDs; numbers and booleans have typed controls. Reset removes an override. Add entry extends a list, minus removes an entry, and ^ moves it upward. JSON remains optional."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Save and Recovery",
+      "text": "Save to world or Ctrl+S submits the entire draft. Done returns from a nested form. Rejected saves preserve your draft and show the reason. A stale draft is rejected after someone else changes definitions; reopen the definition before retrying."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Leave Editing",
+      "text": "Run /mastery edit_mode false or choose Exit edit. Your personal skill layout returns. Logout and losing operator permission also end editing. Unsaved edits do not change gameplay. Saved edits remain active for all players."
+    }
+  ]
+}

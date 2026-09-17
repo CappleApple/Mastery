@@ -1,0 +1,23 @@
+{
+  "tree": "mastery:holy",
+  "name": "Holy Mitigation",
+  "description": "Reduce unfavorable Holy matchup penalties by 10% per rank.",
+  "icon": "minecraft:book",
+  "type": "passive",
+  "cost": 1,
+  "max_rank": 5,
+  "level": 0,
+  "dependencies": [
+    "mastery:holy/foundation"
+  ],
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "mastery:holy_mitigation",
+      "amount": 0.1,
+      "operation": "add_value"
+    }
+  ],
+  "visibility": "available",
+  "toggleable": true
+}
