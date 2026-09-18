@@ -1,0 +1,54 @@
+{
+  "name": "Author Player Classes",
+  "category": "mastery:editor",
+  "icon": "minecraft:player_head",
+  "sortnum": 13,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Create a Class",
+      "text": "Open Definitions, choose Classes, and use New definition. Set a namespaced ID, name, description, and icon. The icon picker accepts the same loaded textures, items, and native spell icons as skills. Save to world validates the entire starting package."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Starting Points",
+      "text": "Open Starting points and choose Add field. Select a loaded tree and enter its integer point grant. A class can supply several currencies at once. These are direct grants, so XP-gain modifiers do not multiply them."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Starting Skills",
+      "text": "Open Starting skills and use Add field to choose nodes and their ranks. Include prerequisite ranks, using normal AND/OR logic. Excluded skill combinations are rejected. Existing higher ranks are preserved, and starter purchases do not charge the player."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Skill Levels and Gates",
+      "text": "Starting skills discover their trees, unlock their book tokens, and raise required tree levels when necessary. Those starting levels award no milestone points. World-tier and external requirements still apply. Active spells and spell modifiers must still be assigned or equipped normally."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Starting Inventory",
+      "text": "Add native item stacks under Starting inventory. The first armor item for each slot equips automatically. Displaced armor and duplicate starter armor enter inventory, or the saved overflow queue when full. Offhand contents remain equipped. The player preview uses the same rules."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Native Components",
+      "text": "Components use Minecraft's own item format. Add minecraft:enchantments as an object, then levels as an object containing minecraft:sharpness with numeric value 2. For minecraft:custom_name, use a string containing the quoted JSON text \"Starter Blade\". Invalid component values reject the save."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Class Attributes",
+      "text": "Each Attributes entry chooses a registered attribute, a finite amount, and an operation. add_value adds directly; add_multiplied_base and add_multiplied_total use vanilla attribute calculations. Class bonuses are separate from skill and equipment bonuses."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Rewards and Reloads",
+      "text": "Changing starter items, points, or skills affects future choices only. Attribute edits update existing members after reload. Full inventories queue surplus supplies safely. Removing a class clears its modifiers but retains the player's choice and reward receipt."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Server Policy",
+      "text": "classSelectorEnabled is a server config setting and defaults to true. Disable it to release waiting players and stop requiring a class. An empty class library also releases them. Ordinary progression resets do not reopen selection or repeat starting rewards."
+    }
+  ],
+  "flag": "mastery_edit_mode"
+}

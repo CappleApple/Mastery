@@ -6,16 +6,22 @@ import java.util.Map;
 /** Independent proficiency and point currency. XP is progress toward the next level. */
 public record TreeDefinition(String id, String name, String description, String icon, String parent,
         int maxLevel, double xpBase, double xpGrowth, int pointEvery,
-        Map<Integer, Integer> pointMilestones, String pointFormula, List<TierCap> tierCaps, String section, TreeTheme theme, UnlockPresentation unlock, int pointsPerAward) {
+        Map<Integer, Integer> pointMilestones, String pointFormula, List<TierCap> tierCaps, String section, TreeTheme theme, UnlockPresentation unlock, int pointsPerAward, String xpAttribute) {
+    public TreeDefinition(String id,String name,String description,String icon,String parent,
+            int maxLevel,double xpBase,double xpGrowth,int pointEvery,Map<Integer,Integer> pointMilestones,
+            String pointFormula,List<TierCap> tierCaps,String section,TreeTheme theme,UnlockPresentation unlock,int pointsPerAward) {
+        this(id,name,description,icon,parent,maxLevel,xpBase,xpGrowth,pointEvery,pointMilestones,pointFormula,tierCaps,section,theme,unlock,pointsPerAward,"");
+    }
     public TreeDefinition(String id,String name,String description,String icon,String parent,
             int maxLevel,double xpBase,double xpGrowth,int pointEvery,Map<Integer,Integer> pointMilestones,
             String pointFormula,List<TierCap> tierCaps,String section,TreeTheme theme,UnlockPresentation unlock) {
         this(id,name,description,icon,parent,maxLevel,xpBase,xpGrowth,pointEvery,pointMilestones,pointFormula,tierCaps,section,theme,unlock,1);
     }
     public TreeDefinition withMaxLevel(int maximum) {
-        return new TreeDefinition(id,name,description,icon,parent,maximum,xpBase,xpGrowth,pointEvery,pointMilestones,pointFormula,tierCaps,section,theme,unlock,pointsPerAward);
+        return new TreeDefinition(id,name,description,icon,parent,maximum,xpBase,xpGrowth,pointEvery,pointMilestones,pointFormula,tierCaps,section,theme,unlock,pointsPerAward,xpAttribute);
     }
     public TreeDefinition {
+        xpAttribute = xpAttribute == null ? "" : xpAttribute;
         pointMilestones = Map.copyOf(pointMilestones);
         tierCaps = List.copyOf(tierCaps);
         theme = theme == null ? TreeTheme.DEFAULT : theme;

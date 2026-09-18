@@ -25,6 +25,21 @@ public final class GraphLayout {
 
     private GraphLayout() {}
 
+    /** Recover growth directions from persisted positions before generating any missing branches. */
+    public static Map<String,String> restoreOrientations(Collection<Entry> entries, Map<String,Point> saved,
+                                                         Map<String,Point> offsets, Map<String,String> orientations) {
+        var positions = new HashMap<>(saved);
+        applyRelativeOffsets(positions, primaryParents(entries), offsets, offsets.keySet());
+        var result = new HashMap<>(orientations);
+        for (var entry : entries) if (entry.kind() == Kind.TREE) {
+            Point root = positions.get(entry.id());
+            if (root != null && root.finite() && (root.x() != 0 || root.y() != 0))
+                result.put(entry.id(), sectionAt(root.x(), root.y()));
+        }
+        return result;
+    }
+
+
     /** Existing organizational anchors have complete inertia; only changed progression rows are placed again. */
     public static Result arrange(Collection<Entry> source, Map<String, Point> saved, Set<String> dirtyTrees) {
         return arrange(source, saved, dirtyTrees, Map.of(), Set.of());
@@ -113,12 +128,46 @@ public final class GraphLayout {
                 if (e.dependencies().isEmpty()) edges.add(new Edge(e.tree(), e.id(), e.kind() == Kind.SYNERGY));
                 for (String dependency : e.dependencies()) {
                     Entry from = entries.get(dependency);
-                    edges.add(new Edge(dependency, e.id(), e.kind() == Kind.SYNERGY || from != null && !from.tree().equals(e.tree())));
+                    Entry branch = entries.get(e.tree());
+                    boolean rootChild = branch != null && branch.kind() == Kind.TREE && branch.parent().equals(dependency);
+                    edges.add(new Edge(dependency, e.id(), e.kind() == Kind.SYNERGY || from != null && !from.tree().equals(e.tree()) && !rootChild));
                 }
                 if (e.kind() == Kind.SYNERGY && e.dependencies().isEmpty()) for (String tree : e.relatedTrees()) if(!tree.equals(e.tree())) edges.add(new Edge(tree, e.id(), true));
             }
         }
         return new Result(Collections.unmodifiableMap(anchors), Map.copyOf(depths), List.copyOf(edges));
+    }
+
+    /** Generated tree anchors share their purchased node icon; descendants retain independent rows. */
+    public static Result attachPromotedRoots(Result layout,Collection<Entry> source) {
+        var entries=new HashMap<String,Entry>();source.forEach(entry->entries.put(entry.id(),entry));
+        var anchors=new HashMap<>(layout.anchors());
+        var pending=new TreeMap<String,Entry>();
+        for(var entry:source)if(entry.kind()==Kind.TREE&&!entry.parent().isBlank()&&entries.containsKey(entry.parent())&&!entries.get(entry.parent()).organizational())pending.put(entry.id(),entry);
+        while(!pending.isEmpty()) {
+            boolean changed=false;
+            for(String id:new ArrayList<>(pending.keySet())) {
+                var root=pending.get(id);var gate=entries.get(root.parent());
+                if(pending.containsKey(gate.tree()))continue;
+                Point target=anchors.get(root.parent()),old=anchors.getOrDefault(id,new Point(0,0));
+                if(target!=null) {
+                    double dx=target.x()-old.x(),dy=target.y()-old.y();
+                    for(var entry:source)if(entry.tree().equals(id)&&anchors.containsKey(entry.id()))anchors.computeIfPresent(entry.id(),(key,p)->new Point(p.x()+dx,p.y()+dy));
+                    anchors.put(id,target);
+                }
+                pending.remove(id);changed=true;
+            }
+            if(!changed)break;
+        }
+        return new Result(Map.copyOf(anchors),layout.depths(),layout.edges());
+    }
+
+    /** Resolve persisted local offsets with generated root anchors available before and after parent movement. */
+    public static Result restoreOffsets(Result arranged,Collection<Entry> entries,Map<String,Point> offsets,Set<String> manual) {
+        Result attached=attachPromotedRoots(arranged,entries);
+        var positioned=new HashMap<>(attached.anchors());
+        applyRelativeOffsets(positioned,primaryParents(entries),offsets,manual);
+        return attachPromotedRoots(new Result(Map.copyOf(positioned),attached.depths(),attached.edges()),entries);
     }
 
     /** Eight equal sectors around fixed logical map origin (0,0); boundary ties turn clockwise. */

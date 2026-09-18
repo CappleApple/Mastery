@@ -1,0 +1,33 @@
+{
+  "name": "Warrior",
+  "description": "Begin with sword and shield practice, extra health, and supplies for close combat.",
+  "icon": "minecraft:iron_sword",
+  "starting_points": {
+    "mastery:one_handed": 2,
+    "mastery:shields": 1
+  },
+  "starting_skills": {
+    "mastery:one_handed/foundation": 1
+  },
+  "starting_inventory": [
+    {
+      "id": "minecraft:wooden_sword",
+      "count": 1
+    },
+    {
+      "id": "minecraft:shield",
+      "count": 1
+    },
+    {
+      "id": "minecraft:bread",
+      "count": 8
+    }
+  ],
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": 4,
+      "operation": "add_value"
+    }
+  ]
+}

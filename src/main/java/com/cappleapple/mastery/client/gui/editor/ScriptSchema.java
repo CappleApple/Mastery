@@ -13,13 +13,15 @@ public final class ScriptSchema {
     public static JsonObject root(String kind) {
         return kind.equals("triggers")
                 ? object("{\"event\":\"hit\",\"chance\":1,\"cooldown\":0,\"conditions\":[],\"actions\":[]}")
-                : object("{\"name\":\"New keyword\",\"max_stacks\":10,\"duration\":100,\"tick_interval\":20,\"tick_actions\":[],\"threshold\":5,\"consume_stacks\":true,\"threshold_actions\":[]}");
+                : object("{\"name\":\"New keyword\",\"description\":\"\",\"max_stacks\":10,\"duration\":100,\"tick_interval\":20,\"decay_delay\":0,\"decay_interval\":20,\"decay_stacks\":0,\"stacks_lost_actions\":[],\"all_stacks_lost_actions\":[],\"tick_actions\":[],\"threshold\":5,\"consume_stacks\":true,\"threshold_actions\":[]}");
     }
     public static JsonObject condition(String type) {
+        if(type.equals("damage"))return object("{\"type\":\"damage\",\"categories\":[\"melee\"]}");
         return type.equals("keyword") ? object("{\"type\":\"keyword\",\"target\":\"target\",\"keyword\":\"\",\"min\":1}")
                 : object("{\"type\":\"health\",\"target\":\"target\",\"unit\":\"fraction\",\"max\":0.5}");
     }
     public static JsonObject conditionFields(JsonObject current) {
+        if(current.has("type")&&current.get("type").getAsString().equals("damage"))return object("{\"type\":\"damage\",\"categories\":[],\"elements\":[],\"damage_types\":[],\"damage_tags\":[]}");
         return current.has("type") && current.get("type").getAsString().equals("keyword")
                 ? object("{\"type\":\"keyword\",\"target\":\"target\",\"keyword\":\"\",\"min\":1,\"max\":10}")
                 : object("{\"type\":\"health\",\"target\":\"target\",\"unit\":\"fraction\",\"min\":0,\"max\":1}");

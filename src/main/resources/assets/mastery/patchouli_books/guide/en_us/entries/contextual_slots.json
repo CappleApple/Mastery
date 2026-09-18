@@ -12,7 +12,7 @@
     {
       "type": "patchouli:text",
       "title": "Equipment Contexts",
-      "text": "Iron's spell HUD shows your active set. If you have more than four slots, use $(k:mastery.previous_spell_page) and $(k:mastery.next_spell_page) to switch pages.$(br2)Unassigned keys keep their usual actions. Empty assignment slots appear only while you have room for more spells."
+      "text": "Iron's spell HUD shows your active set. Each hotbar position has four slots with no pages. In quick-cast mode only, use $(k:mastery.previous_spell_page) and $(k:mastery.next_spell_page) to switch pages.$(br2)Unassigned keys keep their usual actions. Empty assignment slots appear only while you have room for more spells."
     }
   ]
 }

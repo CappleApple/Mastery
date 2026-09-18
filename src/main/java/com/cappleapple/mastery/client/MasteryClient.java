@@ -55,10 +55,11 @@ public final class MasteryClient {
     public static final class Events {
         @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
             Minecraft mc = Minecraft.getInstance();
+            com.cappleapple.mastery.client.gui.ClassSelectionScreen.enforce();
             if(mc.player!=null)NativeSpellHud.view(io.redspace.ironsspellbooks.player.ClientMagicData.getSpellSelectionManager());
             while(PREVIOUS_PAGE.consumeClick()) {ContextualInput.releaseAll();ClientState.cycleBindingPage(-1);}
             while(NEXT_PAGE.consumeClick()) {ContextualInput.releaseAll();ClientState.cycleBindingPage(1);}
-            ClientState.bindingPage=Math.min(ClientState.bindingPage,Math.max(0,(ClientState.capacity()-1)/4));
+            ClientState.bindingPage=ClientState.progress().bindingMode().equals("quick_cast")?Math.min(ClientState.bindingPage,Math.max(0,(ClientState.capacity()-1)/4)):0;
             while (OPEN.consumeClick()) if (mc.player != null && mc.screen == null) mc.setScreen(new MasteryScreen());
             if (mc.screen != null || mc.player == null || !mc.isWindowActive()) ContextualInput.releaseAll();
         }

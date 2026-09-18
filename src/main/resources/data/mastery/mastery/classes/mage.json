@@ -1,0 +1,29 @@
+{
+  "name": "Mage",
+  "description": "Begin with fire practice and a spellbook. Earn proficiency experience 10% faster across all trees.",
+  "icon": "minecraft:blaze_powder",
+  "starting_points": {
+    "mastery:fire": 2,
+    "mastery:evocation": 1
+  },
+  "starting_skills": {
+    "mastery:fire/foundation": 1
+  },
+  "starting_inventory": [
+    {
+      "id": "irons_spellbooks:copper_spell_book",
+      "count": 1
+    },
+    {
+      "id": "minecraft:bread",
+      "count": 8
+    }
+  ],
+  "attributes": [
+    {
+      "attribute": "mastery:experience_gain",
+      "amount": 0.1,
+      "operation": "add_value"
+    }
+  ]
+}

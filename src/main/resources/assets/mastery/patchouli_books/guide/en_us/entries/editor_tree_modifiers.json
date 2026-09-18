@@ -1,0 +1,29 @@
+{
+  "name": "Tree Modifiers",
+  "category": "mastery:editor",
+  "icon": "minecraft:blaze_powder",
+  "sortnum": 16,
+  "flag": "mastery_edit_mode",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Apply Across a Tree",
+      "text": "Create a Modifier node and set Modifier to mastery:tree. Add trigger, keyword bonus, or spell modifier effects. The node activates when purchased and enabled without consuming a spell modifier slot. Its owning tree supplies its damage filter."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Fire-Only Scorch",
+      "text": "On the Fire tree, add a mastery:trigger effect selecting mastery:scorch_on_hit. The Fire tree has a damage filter with irons_spellbooks:fire in Elements. Fire weapon hits and Fire skills in that tree can apply Scorch; physical and other elemental hits cannot."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Sub-Trees",
+      "text": "Inherit subtrees is enabled by default. Flame Blade inherits from Fire and Two-Handed through its root prerequisites. Filters still apply: inherited Fire Scorch requires Fire damage. Disabling Inherit subtrees limits native spells to the direct tree. Weapon hits use the damage filter."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Buff a Keyword",
+      "text": "Add mastery:keyword_modifier. Select mastery:scorch and use Stacks, Damage, or Duration, plus their Percent fields. For example Damage percent 0.25 adds 25% per rank. Flat Duration 20 adds one second per rank. These bonuses retain the modifier\u2019s tree and damage scope."
+    }
+  ]
+}

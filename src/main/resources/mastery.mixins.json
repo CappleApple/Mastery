@@ -5,6 +5,9 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "integration.IronSpellParametersMixin",
+    "integration.TempoSpellSnapshotMixin",
+    "integration.TempoPreparedSpellsMixin",
+    "integration.TempoHeldChargesMixin",
     "integration.IronContinuousManaMixin",
     "integration.IronMagicDataAccessor",
     "integration.IronProjectileScaleMixin",
@@ -19,9 +22,12 @@
   ],
   "client": [
     "client.MasteryKeyboardMixin",
+    "client.KeywordFontMixin",
+    "client.KeywordTooltipAccessor",
     "client.MasteryMouseMixin",
     "client.IronFireballRendererMixin",
     "client.IronSpellHudMixin",
+    "client.IronHudSelectionMixin",
     "client.MultiLineEditBoxAccessor",
     "client.IronCastBarMixin"
   ],

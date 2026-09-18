@@ -58,6 +58,6 @@ class ProgressionReconciliationTest {
         var player = PlayerProgress.fromJson(json("{\"version\":1,\"cooldowns\":{\"mastery:fireball\":999},\"loadouts\":{\"test:context\":[\"irons_spellbooks:fireball\"]}}"));
         assertFalse(player.toJson().has("cooldowns"), "Native Iron player data is the sole cooldown owner");
         assertEquals("irons_spellbooks:fireball", player.loadout("test:context").getFirst());
-        assertEquals(3, player.toJson().get("version").getAsInt());
+        assertEquals(PlayerProgress.FORMAT_VERSION, player.toJson().get("version").getAsInt());
     }
 }

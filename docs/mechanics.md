@@ -20,6 +20,24 @@ A trigger does nothing until an active, purchased skill grants it. Add this obje
 
 Reusable effects can hold the same object and be referenced through the existing `ref` mechanism. Skill eligibility, toggles, book gates, tree limits, prerequisites, and modifier-slot selection apply normally. If several active nodes grant the same trigger, it runs once per event and uses the highest effective rank. Its cooldown is shared by that trigger ID on that player.
 
+The bundled Scorch modifier attaches to Fireball; Gathering Thunder attaches to Lightning Bolt. Both consume a modifier slot. Purchasing one does not grant a general on-hit passive: its trigger runs only when damage comes from that player's assigned spell. Scorch cannot proc from a sword, elemental weapon bonus, or another Fire spell. Thunder cannot proc from Fireball.
+
+For a spell-bound trigger, set the node's `type` to `modifier`, select its native `spell`, and add a `mastery:trigger` effect. Modifier nodes default to the `mastery:native_spell` handler when `modifier` is empty or omitted. Set the active skill as a dependency to place the modifier beneath it. For example:
+
+```json
+{
+  "tree": "mastery:fire",
+  "type": "modifier",
+  "spell": "irons_spellbooks:fireball",
+  "dependencies": ["mastery:fireball"],
+  "effects": [{"type": "mastery:trigger", "trigger": "mastery:scorch_on_hit"}]
+}
+```
+
+Matching uses Iron's native spell damage source, including delayed projectile impacts, and captures the eligible assignments and slot budget at impact. Changing assignments before the queued event is processed cannot add a proc retroactively. Unattributed damage fails closed for modifier triggers. Incoming enemy spell damage does not use the victim's spell modifiers. Keyword ticks and secondary proc spells retain the normal recursion rules and do not borrow a spell's modifier assignments. Use a passive node for general hit, hurt, kill, or death scripts.
+
+Existing purchases retain their ranks. If the modifier is not assigned, enable it with a free slot on its target spell.
+
 The bundled `mastery:scorch`, `mastery:thunder`, `mastery:scorch_on_hit`, and `mastery:thunder_on_hit` definitions are templates. They do not add free combat abilities to players.
 
 ## Trigger definition
@@ -41,7 +59,8 @@ The bundled `mastery:scorch`, `mastery:thunder`, `mastery:scorch_on_hit`, and `m
 
 | Field | Default | Behavior |
 | --- | --- | --- |
-| `name` | Optional | Editor label. |
+| `name` | Optional | Display name used by the editor and keyword hover lookup. |
+| `description` | `""` | Optional tooltip description, followed by stats derived from the keyword script. |
 | `event` | Required | `hit`, `kill`, `hurt`, or `death`. |
 | `chance` | `1` | Base probability between 0 and 1. |
 | `cooldown` | `0` | Ticks after a successful roll before the same trigger can run again. Maximum 72,000. |
@@ -50,7 +69,7 @@ The bundled `mastery:scorch`, `mastery:thunder`, `mastery:scorch_on_hit`, and `m
 
 A game tick is 1/20 second. Probabilities and percentage health use fractions: `0.25` means 25%.
 
-`mastery:proc_chance` adds percentage points to a trigger's chance, then clamps the result to 0–1. A trigger with `chance: 0.25` and a `mastery:proc_chance` attribute bonus of `0.20` has a 45% chance. Grant the attribute through an ordinary skill attribute effect:
+`mastery:proc_chance` adds percentage points to a trigger's chance, then clamps the result to 0â€“1. A trigger with `chance: 0.25` and a `mastery:proc_chance` attribute bonus of `0.20` has a 45% chance. Grant the attribute through an ordinary skill attribute effect:
 
 ```json
 {
@@ -85,7 +104,7 @@ Health conditions support either side and inclusive bounds:
 ]
 ```
 
-The first condition requires the enemy to be at or below 25% of maximum health. The second requires the player to have 4–10 health points. Two health points equal one ordinary heart. Omitted `min` means zero; omitted `max` means no upper bound. A condition aimed at a missing target fails. Thresholds are conditions evaluated on each event, not separate once-only health-crossing events.
+The first condition requires the enemy to be at or below 25% of maximum health. The second requires the player to have 4â€“10 health points. Two health points equal one ordinary heart. Omitted `min` means zero; omitted `max` means no upper bound. A condition aimed at a missing target fails. Thresholds are conditions evaluated on each event, not separate once-only health-crossing events.
 
 Keyword conditions test current stacks:
 
@@ -94,6 +113,33 @@ Keyword conditions test current stacks:
 ```
 
 `min` defaults to 1, `max` to 1024. Use `max: 0` with `min: 0` to require absence. Conditions on a trigger use the event target. Conditions on an action use that action's selected target; `self` always refers to the player who owns the ability.
+
+## Damage filters
+
+![Damage filters in the visual editor](images/mastery-damage-filters.png)
+
+Triggers and individual actions accept a `damage` condition:
+
+```json
+{"type":"damage","categories":["melee"],"elements":["mastery:fire"]}
+```
+
+This matches a melee hit containing fire damage. Combine it with a health condition for an on-hit health threshold. It also works on `kill`, `hurt`, and `death`.
+
+| Field | Matches |
+| --- | --- |
+| `categories` | `melee`, `ranged`, `magic`, `physical`, `elemental` |
+| `elements` | Mastery damage definition IDs or native Iron's school IDs, including physical definitions such as `mastery:slashing` |
+| `damage_types` | Native damage IDs, such as `minecraft:arrow` |
+| `damage_tags` | Native damage-type tags, such as `minecraft:is_projectile` |
+
+Entries within a list are alternatives. Every populated list must match; omitted or empty lists do not restrict the event. At least one filter is required. To require both melee and magic, use two damage conditions. The visual editor provides registry selectors for each list.
+
+Melee means a native player or mob attack, including its converted damage. Ranged means a projectile entity or damage tagged `minecraft:is_projectile`. Iron's school damage counts as magic and elemental; definitions without a school use their `elemental` flag. Native player/mob attacks, arrows, and tridents count as physical unless converted into another type.
+
+Add native types to `data/mastery/tags/damage_type/is_magic.json` to extend `mastery:is_magic`. Its bundled values include vanilla magic, indirect magic, dragon breath, wither, and wither skull damage. School discovery happens at impact and includes registered addon schools.
+
+Hit and hurt filters inspect the union of portions that actually dealt damage, with one proc attempt per attack. Immune or canceled portions do not qualify. Kill and death filters inspect the fatal portion. Equipment changes after impact do not change a queued event. Action filters inspect that same originating event, even when the action chooses nearby targets. Keywords retain the damage snapshot from their latest application. Their periodic, threshold, and stack-loss actions can test that snapshot; keywords applied directly through the Java API have no originating damage filter.
 
 ## Actions and targeting
 
@@ -128,7 +174,7 @@ Each action accepts these common fields:
 
 `element` accepts an element definition ID such as `mastery:slashing` or a registered Iron's school ID. `school` remains an alias; if both are supplied, the nonempty `element` wins. Empty optional selectors use the school or action default. Typed damage and healing use the same Mastery power and target-matchup rules as the damage system. Explicit `amount` is the starting value; it is not pre-multiplied by Iron's native spell-power attributes. Native spell actions use the spell's own normal power calculation.
 
-For damage and lightning, starting damage is `amount + triggering_hit_damage × damage_fraction`, then `per_rank` and `per_stack` apply. Keyword ticks and threshold actions have no original hit amount, so their `damage_fraction` contributes zero. Successful hit damage includes the applied health damage of all weapon portions; health thresholds use the same completed hit. Use a fixed amount for keyword DOT and explosions.
+For damage and lightning, starting damage is `amount + triggering_hit_damage Ã— damage_fraction`, then `per_rank` and `per_stack` apply. Keyword ticks and threshold actions have no original hit amount, so their `damage_fraction` contributes zero. Successful hit damage includes the applied health damage of all weapon portions; health thresholds use the same completed hit. Use a fixed amount for keyword DOT and explosions.
 
 Examples:
 
@@ -185,9 +231,10 @@ Each stack contributes one starting fire damage every 20 ticks. Adding a stack r
 
 | Field | Default | Behavior |
 | --- | --- | --- |
-| `name` | Optional | Editor label. |
+| `name` | Optional | Display name used by the editor and keyword hover lookup. |
+| `description` | `""` | Optional tooltip description, followed by stats derived from the keyword script. |
 | `max_stacks` | `1` | Stack cap, from 1 to 1024. |
-| `duration` | `100` | Ticks until the keyword expires, from 1 to 72,000. |
+| `duration` | `100` | Ticks until the keyword expires, from 0 to 72,000; zero disables expiry. |
 | `tick_interval` | `20` | Ticks between tick actions, from 1 to 72,000. |
 | `tick_actions` | `[]` | Actions run on each scheduled tick. |
 | `threshold` | `0` | Stack count that triggers threshold actions. Zero disables the threshold. Must not exceed the cap. |
@@ -219,3 +266,77 @@ Keyword stacks and proc cooldowns are temporary. They reset on definition reload
 Execution is bounded to 2,048 queued combat events and 8,192 selected-target actions per server tick. A chain may nest 16 keyword thresholds. Each definition permits 64 actions per list and 32 conditions; an entity may hold 64 keywords, and at most 4,096 entities may hold live keywords. Runtime limits stop excess work. Design interactions so they finish well below those limits.
 
 If a script appears inactive, check the granting node's effective rank and toggle, the trigger's event, inclusive health bounds, chance and cooldown, and whether its target exists. Then check keyword expiry and target filters. A registered native spell can still reject its own preconditions or be canceled by another mod. Unexpected action exceptions are logged as `Mastery combat action failed`; the rest of that action chain stops.
+
+
+## Tree modifiers
+
+Set a modifier node's `modifier` to `mastery:tree`. It activates when purchased and enabled, without occupying a spell modifier slot. Its `damage_filter` inherits from the owning tree. The bundled school trees each filter to their school. The Fire tree uses `elements: ["irons_spellbooks:fire"]`, so its tree modifiers apply only when the originating hit contains accepted Fire damage.
+
+`data/example/mastery/nodes/fire_scorch.json`:
+
+```json
+{
+  "tree": "mastery:fire",
+  "name": "Scorching Fire",
+  "type": "modifier",
+  "modifier": "mastery:tree",
+  "effects": [{"type": "mastery:trigger", "trigger": "mastery:scorch_on_hit"}]
+}
+```
+
+This uses the bundled Scorch trigger, including its existing chance and cooldown. It affects Fire weapon damage and Fire skills in the Fire tree or its sub-trees. It does not turn non-Fire attacks into Scorch applications.
+
+`inherit_subtrees` defaults to `true`. A promoted tree inherits from its root's owning tree and the trees of its prerequisite nodes, recursively. Flame Blade therefore inherits Fire and Two-Handed modifiers. Set `inherit_subtrees: false` on a tree modifier to restrict its spell scope to its direct tree. Weapon hits continue to use the damage filter. Global defaults, tree definitions, and individual nodes can set this option. An empty damage filter allows any damage type; native spells must still belong to the applicable tree. Damage-type filters and tree membership are separate requirements.
+
+## Keyword bonuses
+
+Add `mastery:keyword_modifier` effects to a passive, equipped spell modifier, or tree modifier. The modifier's normal activation and damage scope apply.
+
+```json
+{
+  "type": "mastery:keyword_modifier",
+  "keyword": "mastery:scorch",
+  "stacks": 1,
+  "stacks_percent": 0.25,
+  "damage": 2,
+  "damage_percent": 0.5,
+  "duration": 20,
+  "duration_percent": 0.25
+}
+```
+
+All fields are optional except `type` and `keyword`. Flat bonuses and percentages scale by active rank and add across matching effects. The result is `(base + flat bonuses) × max(0, 1 + percentage bonuses)`, clamped to a nonnegative value. Percentages use fractions: `0.25` means +25%. Duration additions are ticks; 20 ticks is one second.
+
+Fractional applied stacks roll for one additional stack: 1.25 stacks means one stack plus a 25% chance of a second. The keyword's maximum still applies. Damage bonuses affect keyword `damage` and `lightning` actions before their `per_rank` and `per_stack` scaling. They do not rewrite damage inside a native spell action. Stack and duration bonuses are evaluated on application; damage bonuses use the owner's currently active modifiers and the stored application source when the action runs.
+
+## Duration, decay, and stack-loss events
+
+![Stack-loss action lane](images/mastery-keyword-stack-loss-editor.png)
+
+Each keyword has one shared duration and one decay timer. Reapplying stacks refreshes both, even at the stack cap. Duration defaults to 100 ticks; `duration: 0` lasts until consumed, removed, or fully decayed. Entity removal, owner logout, server stop, and definition reload clear temporary keyword state without running loss actions.
+
+| Field | Default | Behavior |
+| --- | --- | --- |
+| `decay_delay` | `0` | Ticks after application before the first loss; zero begins on the next tick. |
+| `decay_stacks` | `0` | Stacks removed per decay step; zero disables decay. |
+| `decay_interval` | `20` | Ticks between subsequent losses. |
+| `stacks_lost_actions` | `[]` | Runs after any removal, including decay, expiry, threshold consumption, and `remove_keyword`. |
+| `all_stacks_lost_actions` | `[]` | Also runs when that removal empties the keyword. |
+
+Loss actions use the original owner and target. `per_stack` uses the number actually removed, including the final partial decay step. The removal happens before callbacks; the ordinary action/depth limits also apply to callbacks that apply another keyword. Expiry removes all remaining stacks in one event.
+
+```json
+{
+  "name": "Fading Scorch",
+  "max_stacks": 10,
+  "duration": 0,
+  "decay_delay": 60,
+  "decay_interval": 20,
+  "decay_stacks": 1,
+  "tick_interval": 20,
+  "tick_actions": [{"type": "damage", "element": "mastery:fire", "amount": 1, "per_stack": true}],
+  "all_stacks_lost_actions": [{"type": "particles", "particle": "minecraft:smoke", "count": 8}]
+}
+```
+
+The visual keyword editor has four action lanes: **Tick actions**, **Threshold actions**, **Stacks lost actions**, and **All stacks lost actions**. Use **Stack settings** for duration and decay fields. Node effect editors expose all six keyword bonus fields and a keyword selector.

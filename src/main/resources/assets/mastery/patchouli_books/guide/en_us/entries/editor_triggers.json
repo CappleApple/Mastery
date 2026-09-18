@@ -8,7 +8,7 @@
     {
       "type": "patchouli:text",
       "title": "Connected Cards",
-      "text": "Definitions > Triggers opens a visual script: WHEN selects the combat event, IF lists conditions, and THEN lists ordered actions. Add a condition or action from its type picker, then fill its settings. Click an existing card to edit it."
+      "text": "Definitions > Triggers opens a visual script: WHEN selects the combat event, IF lists conditions, and THEN lists ordered actions. Add a condition or action from its type picker, then fill its settings. Click an existing card to edit it. Scorch modifies Fireball; Gathering Thunder modifies Lightning Bolt."
     },
     {
       "type": "patchouli:text",
@@ -23,7 +23,7 @@
     {
       "type": "patchouli:text",
       "title": "Attach the Script",
-      "text": "A trigger definition does nothing until an active node includes an effect with type mastery:trigger and trigger set to its ID. Use Definitions > Nodes, open Effects, add an entry, choose the trigger type, and select your script."
+      "text": "A trigger requires a purchased node effect: mastery:trigger, with trigger set to the script ID. For spell-only behavior, set the node Type to modifier, select Spell, and put that active skill in Dependencies. The modifier uses a slot and only reacts to its assigned spell. Use passive for a general combat trigger."
     },
     {
       "type": "patchouli:text",
@@ -34,6 +34,16 @@
       "type": "patchouli:text",
       "title": "Recursion Boundaries",
       "text": "Script actions and proc projectiles do not recursively start hit/hurt chains. Their actual kills and deaths can run distinct kill/death triggers once. Proc casts and keyword actions are bounded. Build an explicit action sequence instead of relying on a hit proc to trigger itself."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Keyword Tooltips",
+      "text": "In a keyword script, Settings > Description adds optional tooltip text. Names such as Scorch can be hovered in screen text, guide pages, and tooltips. Stack limits, lifetime, periodic actions, and threshold effects come directly from the script. Use distinct names so each keyword is unambiguous."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Tempo Charge Modifier",
+      "text": "On a modifier node, select the target spell and add a mastery:spell_modifier effect. Set Extra charges to a whole number, such as 2. Rank 3 then grants six additional charges while assigned and enabled. Each modifier uses a slot. Passive nodes may use the same effect with a spell filter. Tempo Not Time is optional; without it this bonus has no effect."
     }
   ]
 }

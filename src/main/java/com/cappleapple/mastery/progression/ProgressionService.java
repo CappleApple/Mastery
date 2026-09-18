@@ -22,6 +22,7 @@ public final class ProgressionService {
         TreeDefinition definition = definitions.trees().get(treeId);
         if (definition == null) return Change.failure("Unknown tree: " + treeId);
         if (!Double.isFinite(amount) || amount < 0) return Change.failure("XP must be finite and nonnegative");
+        if (!PromotedTrees.unlocked(definitions,player,treeId,worldTier)) return Change.failure("Unlock the tree root before earning its XP");
         TreeProgress existing = player.trees().get(treeId);
         int oldLevel = existing == null ? 0 : existing.level();
         int highest = existing == null ? 0 : existing.highestLevel();
@@ -93,7 +94,7 @@ public final class ProgressionService {
         return purchase(definitions,player,nodeId,worldTier,evaluator,node->{
             try {
                 var resolved=com.cappleapple.mastery.costs.CostResolver.forNode(definitions,nodeId);
-                var plan=resolved.plan(com.cappleapple.mastery.costs.CostResolver.pointsBudget(player));
+                var plan=resolved.plan(com.cappleapple.mastery.costs.CostResolver.pointsBudget(definitions,player,worldTier,evaluator));
                 if(plan.isEmpty())return Change.failure("Not enough resources: "+resolved.describe(id->id));
                 int spent=(int)Math.min(Integer.MAX_VALUE,plan.get().points().values().stream().mapToLong(Integer::longValue).sum());
                 plan.get().points().forEach((tree,amount)->player.tree(tree).points(player.tree(tree).points()-amount));
@@ -116,6 +117,7 @@ public final class ProgressionService {
         if(node.purchaseOrder()==0)node.purchaseOrder(player.nextSequence());
         tree.discovered(true);node.rank(node.rank()+1);
         if(node.rank()==1)node.toggled(true);
+        if(definition.rootTree()!=null)player.tree(PromotedTrees.treeId(definition)).discovered(true);
         return new Change(true,"Purchased "+nodeId+" rank "+node.rank(),0,payment.points());
     }
     /** Empty means allowed. This method never creates or mutates player state. */
@@ -126,6 +128,7 @@ public final class ProgressionService {
         if (!bookUnlocked(definitions, player, nodeId)) return "Requires a skill book unlock";
         TreeDefinition tree = definitions.trees().get(node.tree());
         if (tree == null) return "Unknown tree: " + node.tree();
+        if (!PromotedTrees.unlocked(definitions,player,node.tree(),worldTier,evaluator)) return "Unlock the tree root first";
         int rank = player.rank(nodeId);
         if (rank >= node.maxRank()) return "Maximum rank reached";
         TierCap caps = tree.capAt(worldTier);
@@ -148,7 +151,7 @@ public final class ProgressionService {
         } catch (RuntimeException ex) { return "Requirement evaluation failed: " + ex.getMessage(); }
         if(checkPoints)try {
             var cost=com.cappleapple.mastery.costs.CostResolver.forNode(definitions,nodeId);
-            if(cost.plan(com.cappleapple.mastery.costs.CostResolver.pointsBudget(player)).isEmpty())return "Not enough resources: "+cost.describe(id->id);
+            if(cost.plan(com.cappleapple.mastery.costs.CostResolver.pointsBudget(definitions,player,worldTier,evaluator)).isEmpty())return "Not enough resources: "+cost.describe(id->id);
         }catch(RuntimeException ex){return "Could not resolve purchase costs: "+ex.getMessage();}
         return "";
     }
@@ -173,7 +176,7 @@ public final class ProgressionService {
     /** Purchased rank available under the node's own tree, level, rank and depth caps. */
     public static int cappedRank(DefinitionSet definitions, PlayerProgress player, String nodeId, int worldTier) {
         NodeDefinition node = definitions.nodes().get(nodeId);
-        if (node == null || !bookUnlocked(definitions, player, nodeId)) return 0;
+        if (node == null || !bookUnlocked(definitions, player, nodeId) || !PromotedTrees.unlocked(definitions,player,node.tree(),worldTier)) return 0;
         TreeDefinition tree = definitions.trees().get(node.tree());
         TreeProgress state = player.trees().get(node.tree());
         if (tree == null || state == null || worldTier >= 0 && worldTier < node.worldTier()
@@ -212,6 +215,7 @@ public final class ProgressionService {
             if (state.unlockOrder() == 0) state.unlockOrder(player.nextSequence());
             if (state.purchaseOrder() == 0) state.purchaseOrder(player.nextSequence());
             player.tree(node.tree()).discovered(true);
+            if(node.rootTree()!=null)player.tree(PromotedTrees.treeId(node)).discovered(true);
         }
         reconcile(definitions, player);
         return Change.success("Set " + nodeId + " to rank " + rank);
@@ -235,13 +239,16 @@ public final class ProgressionService {
         player.nodes().forEach((id, progress) -> {
             NodeDefinition node = definitions.nodes().get(id);
             progress.rank(Math.min(node.maxRank(), progress.rank()));
-            if (progress.rank() > 0) player.tree(node.tree()).discovered(true);
+            if (progress.rank() > 0) {
+                player.tree(node.tree()).discovered(true);
+                if(node.rootTree()!=null)player.tree(PromotedTrees.treeId(node)).discovered(true);
+            }
         });
         migrateBindings(player);
         player.loadouts().entrySet().removeIf(entry -> !com.cappleapple.mastery.spells.BindingSlots.valid(entry.getKey()));
         player.loadouts().forEach((context, slots) -> {
             while (slots.size() < 4) slots.add("");
-            while (slots.size() > com.cappleapple.mastery.spells.BindingSlots.LIMIT) slots.removeLast();
+            while (slots.size() > com.cappleapple.mastery.spells.BindingSlots.limit(context)) slots.removeLast();
             for (int index = 0; index < slots.size(); index++) {
                 String id = slots.get(index);
                 SpellDefinition spell = definitions.spells().get(id);
@@ -252,7 +259,7 @@ public final class ProgressionService {
         player.activeModifiers().entrySet().removeIf(entry -> !definitions.spells().containsKey(entry.getKey()) || !ownsSpell(definitions, player, entry.getKey()));
         player.activeModifiers().forEach((spell, modifiers) -> modifiers.removeIf(id -> {
             NodeDefinition node = definitions.nodes().get(id);
-            return node == null || node.modifier().isEmpty() || !(node.spell().equals(spell)||node.effects().stream().anyMatch(effect->effectTargetsModifier(definitions,effect,spell,0))) || player.rank(id) == 0;
+            return node == null || !node.spellModifier() || !(node.spell().equals(spell)||node.effects().stream().anyMatch(effect->effectTargetsModifier(definitions,effect,spell,0))) || player.rank(id) == 0;
         }));
     }
 
@@ -272,8 +279,8 @@ public final class ProgressionService {
     public static boolean ownsSpell(DefinitionSet definitions, PlayerProgress player, String spell) {
         for (var entry : player.nodes().entrySet()) {
             NodeDefinition node = definitions.nodes().get(entry.getKey());
-            if (node == null || entry.getValue().rank() <= 0 || !bookUnlocked(definitions, player, node.id())) continue;
-            if (node.modifier().isEmpty() && node.spell().equals(spell)) return true;
+            if (node == null || entry.getValue().rank() <= 0 || !bookUnlocked(definitions, player, node.id()) || !PromotedTrees.unlocked(definitions,player,node.tree(),-1)) continue;
+            if (!node.spellModifier() && node.spell().equals(spell)) return true;
             for (JsonObject effect : node.effects()) if (effectUnlocks(definitions, effect, spell, 0)) return true;
         }
         return false;

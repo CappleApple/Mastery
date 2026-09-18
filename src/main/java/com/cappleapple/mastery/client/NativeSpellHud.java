@@ -10,6 +10,10 @@ import java.util.*;
 
 /** Read-only selection view used solely by Iron's existing HUD renderer. Equipment is never rewritten. */
 public final class NativeSpellHud {
+    private static int renderDepth;
+    public static void beginRender(){renderDepth++;}
+    public static void endRender(){renderDepth=Math.max(0,renderDepth-1);}
+    public static SpellSelectionManager duringRender(SpellSelectionManager original){return renderDepth>0?view(original):original;}
     private static HudSelection manager;
     private static Player owner;
     private static long revision=-1;
@@ -24,9 +28,9 @@ public final class NativeSpellHud {
             String previous=context;context=ClientState.context();revision=ClientState.revision();
             List<SpellSelectionManager.SelectionOption> result=new ArrayList<>();
             var slots=ClientState.progress().loadouts().getOrDefault(context,List.of());
-            for(int index=0;index<Math.min(slots.size(),ClientState.capacity());index++) {
+            for(int index=0;index<Math.min(com.cappleapple.mastery.spells.BindingSlots.limit(context),Math.min(slots.size(),ClientState.capacity()));index++) {
                 String id=slots.get(index);var definition=ClientState.definitions().spells().get(id);
-                if(definition!=null)result.add(new SpellSelectionManager.SelectionOption(new SpellData(SpellRegistry.getSpell(id),definition.level()),Curios.SPELLBOOK_SLOT,index,result.size()));
+                if(definition!=null)result.add(new SpellSelectionManager.SelectionOption(new SpellData(SpellRegistry.getSpell(id),(ClientState.runtime().has("spell_levels")&&ClientState.runtime().getAsJsonObject("spell_levels").has(id)?ClientState.runtime().getAsJsonObject("spell_levels").get(id).getAsInt():definition.level())),Curios.SPELLBOOK_SLOT,index,result.size()));
             }
             if(!previous.equals(context)||!same(spells,result))SpellBarOverlay.fadeoutDelay=80;
             spells=List.copyOf(result);
@@ -34,7 +38,7 @@ public final class NativeSpellHud {
         return manager;
     }
     private static boolean same(List<SpellSelectionManager.SelectionOption> a,List<SpellSelectionManager.SelectionOption> b) {
-        return a.stream().map(s->s.spellData.getSpell().getSpellId()).toList().equals(b.stream().map(s->s.spellData.getSpell().getSpellId()).toList());
+        return a.stream().map(s->s.spellData.getSpell().getSpellId()+"="+s.spellData.getLevel()).toList().equals(b.stream().map(s->s.spellData.getSpell().getSpellId()+"="+s.spellData.getLevel()).toList());
     }
     public static void clear(){manager=null;owner=null;spells=List.of();revision=-1;context="";lastCast="";}
     private static final class HudSelection extends SpellSelectionManager {

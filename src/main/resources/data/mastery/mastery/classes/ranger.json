@@ -1,0 +1,33 @@
+{
+  "name": "Ranger",
+  "description": "Begin with bow practice, arrows, and a movement speed bonus.",
+  "icon": "minecraft:bow",
+  "starting_points": {
+    "mastery:bow": 2,
+    "mastery:mobility": 1
+  },
+  "starting_skills": {
+    "mastery:bow/foundation": 1
+  },
+  "starting_inventory": [
+    {
+      "id": "minecraft:bow",
+      "count": 1
+    },
+    {
+      "id": "minecraft:arrow",
+      "count": 32
+    },
+    {
+      "id": "minecraft:bread",
+      "count": 8
+    }
+  ],
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.05,
+      "operation": "add_multiplied_base"
+    }
+  ]
+}

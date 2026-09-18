@@ -82,6 +82,9 @@ public final class MasteryEvents {
         j.addProperty("damage",amount);j.addProperty("amount",amount);j.addProperty("kill",kill);
         j.addProperty("critical",CRITICAL.getOrDefault(p.getUUID(),-1L)==p.level().getGameTime()||(source.getDirectEntity() instanceof AbstractArrow arrow&&arrow.isCritArrow()));
         j.addProperty("projectile",source.getDirectEntity() instanceof Projectile);
+        var captured=com.cappleapple.mastery.mechanics.DamageContexts.capture(source);
+        j.addProperty("melee",captured.categories().contains("melee"));
+        if(!captured.spell().isBlank())j.addProperty("skill_spell",captured.spell());
         j.addProperty("damage_type",source.typeHolder().unwrapKey().map(k->k.location().toString()).orElse(""));
         com.cappleapple.mastery.integration.SchoolDamage.addContext(source,j);
         if(target!=null){j.addProperty("entity",BuiltInRegistries.ENTITY_TYPE.getKey(target.getType()).toString());j.addProperty("target_id",target.getId());j.addProperty("distance",p.distanceTo(target));}

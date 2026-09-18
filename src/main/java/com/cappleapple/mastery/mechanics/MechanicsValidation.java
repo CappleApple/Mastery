@@ -24,9 +24,16 @@ public final class MechanicsValidation {
         }));
         definitions.keywords().forEach((id, json) -> guarded("keywords/" + id, errors, () -> {
             String path = "keywords/" + id;
+            for(String field:List.of("name","description"))if(json.has(field)&&(!json.get(field).isJsonPrimitive()||!json.getAsJsonPrimitive(field).isString()))
+                errors.add(path+": "+field+" must be a string");
             numeric(json, "max_stacks", 1, 1024, true, path, errors);
-            numeric(json, "duration", 1, 72000, true, path, errors);
+            numeric(json, "duration", 0, 72000, true, path, errors);
             numeric(json, "tick_interval", 1, 72000, true, path, errors);
+            numeric(json,"decay_delay",0,72000,true,path,errors);
+            numeric(json,"decay_interval",1,72000,true,path,errors);
+            numeric(json,"decay_stacks",0,1024,true,path,errors);
+            actions(json,"stacks_lost_actions",false,definitions,path,errors);
+            actions(json,"all_stacks_lost_actions",false,definitions,path,errors);
             numeric(json, "threshold", 0, 1024, true, path, errors);
             boolField(json, "consume_stacks", path, errors);
             if (number(json, "threshold", 0) > number(json, "max_stacks", 1)) errors.add(path + ": threshold exceeds max_stacks");
@@ -43,6 +50,13 @@ public final class MechanicsValidation {
 
     private static void effect(JsonObject effect, DefinitionSet definitions, String path, List<String> errors) {
         guarded(path, errors, () -> {
+            if(text(effect,"type","").equals("mastery:keyword_modifier")) {
+                reference(effect,"keyword",definitions.keywords(),path,errors);
+                for(String stat:List.of("stacks","damage","duration")) {
+                    numeric(effect,stat,-72000,72000,false,path,errors);
+                    numeric(effect,stat+"_percent",-100,100,false,path,errors);
+                }
+            }
             if (text(effect, "type", "").equals("mastery:trigger")) reference(effect, "trigger", definitions.triggers(), path, errors);
         });
     }
@@ -109,9 +123,22 @@ public final class MechanicsValidation {
             if (!values.get(i).isJsonObject()) { errors.add(conditionPath + ": expected a condition object"); continue; }
             var condition = values.get(i).getAsJsonObject();
             guarded(conditionPath, errors, () -> {
-                member(condition, "type", Set.of("health", "keyword"), "", conditionPath, errors);
+                member(condition, "type", Set.of("health", "keyword", "damage"), "", conditionPath, errors);
                 member(condition, "target", Set.of("self", "target"), "target", conditionPath, errors);
-                if (text(condition, "type", "").equals("health")) {
+                if(text(condition,"type","").equals("damage")) {
+                    int entries=0;
+                    for(String field:DamageContext.FIELDS)if(condition.has(field)) {
+                        var filters=array(condition,field,64,conditionPath,errors);if(filters==null)continue;
+                        entries+=filters.size();
+                        for(var filter:filters) {
+                            if(!filter.isJsonPrimitive()||!filter.getAsJsonPrimitive().isString()) {errors.add(conditionPath+": "+field+" requires strings");continue;}
+                            String id=filter.getAsString();
+                            if(field.equals("categories")) {if(!DamageContext.CATEGORIES.contains(id))errors.add(conditionPath+": unknown damage category "+id);}
+                            else if(!id.contains(":")||ResourceLocation.tryParse(id)==null)errors.add(conditionPath+": "+field+" requires namespaced IDs");
+                        }
+                    }
+                    if(entries==0)errors.add(conditionPath+": damage condition requires at least one filter");
+                } else if (text(condition, "type", "").equals("health")) {
                     member(condition, "unit", Set.of("points", "fraction"), "points", conditionPath, errors);
                     double maximum = text(condition, "unit", "points").equals("fraction") ? 1 : 1000000;
                     numeric(condition, "min", 0, maximum, false, conditionPath, errors);
@@ -128,18 +155,41 @@ public final class MechanicsValidation {
 
     /** Registry checks run only after common setup, when Iron's and Minecraft registries exist. */
     public static void validateRuntime(DefinitionSet definitions, List<String> errors) {
-        definitions.triggers().forEach((id, value) -> runtimeActions(definitions, value, "actions", "triggers/" + id, errors));
+        definitions.settingOverrides().forEach((id,settings)->{
+            if(settings.has("damage_filter")&&settings.get("damage_filter").isJsonObject()) {
+                var filter=settings.getAsJsonObject("damage_filter").deepCopy();filter.addProperty("type","damage");
+                var list=new JsonArray();list.add(filter);var wrapper=new JsonObject();wrapper.add("conditions",list);
+                runtimeConditions(definitions,wrapper,id+"/damage_filter",errors);
+            }
+        });
+        definitions.triggers().forEach((id, value) -> {runtimeConditions(definitions,value,"triggers/"+id,errors);runtimeActions(definitions, value, "actions", "triggers/" + id, errors);});
         definitions.keywords().forEach((id, value) -> {
+            runtimeActions(definitions,value,"stacks_lost_actions","keywords/"+id,errors);
+            runtimeActions(definitions,value,"all_stacks_lost_actions","keywords/"+id,errors);
             runtimeActions(definitions, value, "tick_actions", "keywords/" + id, errors);
             runtimeActions(definitions, value, "threshold_actions", "keywords/" + id, errors);
         });
     }
 
+    private static void runtimeConditions(DefinitionSet definitions,JsonObject parent,String path,List<String> errors) {
+        if(!parent.has("conditions")||!parent.get("conditions").isJsonArray())return;
+        for(var raw:parent.getAsJsonArray("conditions"))if(raw.isJsonObject())guarded(path,errors,()->{
+            var condition=raw.getAsJsonObject();if(!text(condition,"type","").equals("damage"))return;
+            var server=net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
+            if(server!=null&&condition.has("damage_types"))for(var value:condition.getAsJsonArray("damage_types"))
+                if(!server.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.DAMAGE_TYPE).containsKey(ResourceLocation.parse(value.getAsString())))errors.add(path+": unknown native damage type "+value.getAsString());
+            if(condition.has("elements"))for(var value:condition.getAsJsonArray("elements")) {
+                String id=value.getAsString();if(!definitions.elements().containsKey(id)&&!io.redspace.ironsspellbooks.api.registry.SchoolRegistry.REGISTRY.containsKey(ResourceLocation.parse(id)))
+                    errors.add(path+": unknown damage element or school "+id);
+            }
+        });
+    }
     private static void runtimeActions(DefinitionSet definitions, JsonObject parent, String field, String path, List<String> errors) {
         if (!parent.has(field) || !parent.get(field).isJsonArray()) return;
         for (var value : parent.getAsJsonArray(field)) {
             if (!value.isJsonObject()) continue;
             var action = value.getAsJsonObject();
+            runtimeConditions(definitions,action,path,errors);
             guarded(path, errors, () -> {
                 switch (text(action, "type", "")) {
                     case "spell" -> {

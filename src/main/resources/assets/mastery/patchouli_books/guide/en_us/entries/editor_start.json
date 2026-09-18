@@ -18,7 +18,7 @@
     {
       "type": "patchouli:text",
       "title": "Definition Library",
-      "text": "Choose Definitions on the map to browse trees, nodes, spells, settings, XP sources, reusable requirements/effects, contexts, elements, triggers, and keywords. Choose the type, search IDs, and use New definition. Use a namespaced ID such as mastery:scorch_on_hit."
+      "text": "Choose Definitions on the map to browse classes, trees, nodes, spells, settings, XP sources, reusable requirements/effects, contexts, elements, mob and weapon groups, triggers, and keywords. Choose the type, search IDs, and use New definition with a namespaced ID."
     },
     {
       "type": "patchouli:text",

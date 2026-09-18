@@ -34,7 +34,7 @@ public final class ClientState {
         var state=progress.nodes().get(id);
         var node=definitions.nodes().get(id);
         if(state==null||state.rank()==0||!state.toggled()||node==null) return false;
-        return node.modifier().isBlank()||progress.activeModifiers().values().stream().anyMatch(set -> set.contains(id));
+        return !node.spellModifier()||progress.activeModifiers().values().stream().anyMatch(set -> set.contains(id));
     }
     public static boolean editMode() { return runtime.has("edit_mode") && runtime.get("edit_mode").getAsBoolean(); }
     public static long definitionRevision() { return acceptedDefinitionRevision; }
@@ -44,8 +44,9 @@ public final class ClientState {
                 com.cappleapple.mastery.spells.BindingSlots.hotbar(player==null?0:player.getInventory().selected);
     }
     public static int bindingPage;
-    public static int inputSlot(int key){return bindingPage*4+key;}
+    public static int inputSlot(int key){return progress.bindingMode().equals("quick_cast")?bindingPage*4+key:key;}
     public static void cycleBindingPage(int direction){
+        if(!progress.bindingMode().equals("quick_cast")){bindingPage=0;return;}
         int pages=Math.max(1,(capacity()+3)/4);bindingPage=Math.floorMod(bindingPage+direction,pages);
     }
     public static int capacity() { return runtime.has("capacity") ? runtime.get("capacity").getAsInt() : 0; }
@@ -61,7 +62,12 @@ public final class ClientState {
             if (editorPreferences == null) editorPreferences = new LayoutPreferences();
             return editorPreferences;
         }
-        if (preferences == null) preferences = LayoutPreferences.load(runtime.has("world_id") ? runtime.get("world_id").getAsString() : "");
+        if (preferences == null) {
+            String world=runtime.has("world_id")?runtime.get("world_id").getAsString():"";
+            // Login packets and early screens can arrive before the player/world identity is available.
+            if(world.isBlank()||net.minecraft.client.Minecraft.getInstance().player==null)return new LayoutPreferences();
+            preferences=LayoutPreferences.load(world);
+        }
         return preferences;
     }
     public static void acceptDefinitions(String text) {
@@ -88,14 +94,14 @@ public final class ClientState {
             }
             for (var tree : next.trees().entrySet()) {
                 var before = progress.trees().get(tree.getKey());
-                if (before == null || before.discovered() != tree.getValue().discovered()) dirtyTrees.add(tree.getKey());
+                if (before == null || before.discovered() != tree.getValue().discovered() || before.level() != tree.getValue().level()) dirtyTrees.add(tree.getKey());
             }
             for (String oldTree : progress.trees().keySet()) if (!next.trees().containsKey(oldTree)) dirtyTrees.add(oldTree);
             if (!progress.bookUnlocks().equals(next.bookUnlocks())) dirtyTrees.addAll(definitions.trees().keySet());
             String oldWorld = runtime.has("world_id") ? runtime.get("world_id").getAsString() : "";
             String newWorld = json.has("world_id") ? json.get("world_id").getAsString() : "";
             if (!oldWorld.equals(newWorld)) { if (preferences != null) preferences.save(); preferences = null; editorPreferences = null; layout = null; structureRevision++; }
-            if(!wasEditing)for(var entry:next.nodes().entrySet())if(entry.getValue().rank()>0&&progress.rank(entry.getKey())==0)view().expanded.add(entry.getKey());
+
             // The first snapshot establishes a baseline; reconnecting never replays old levels.
             if (runtime.has("world_id") && oldWorld.equals(newWorld)) {
                 var mc = net.minecraft.client.Minecraft.getInstance();
@@ -105,7 +111,12 @@ public final class ClientState {
                         mc.getToasts().addToast(new SkillLevelToast(definitions.trees().get(id).name(), after.level()));
                 });
             }
+            if(runtime.has("world_tier")&&json.has("world_tier")&&runtime.get("world_tier").getAsInt()!=json.get("world_tier").getAsInt())dirtyTrees.addAll(definitions.trees().keySet());
+            PlayerProgress previous=progress;
             progress = next; runtime = json;
+            // Only live purchases expand a branch; a login snapshot must preserve saved collapse state.
+            if(!newWorld.isBlank()&&oldWorld.equals(newWorld)&&!wasEditing&&!editMode())
+                for(var entry:next.nodes().entrySet())if(entry.getValue().rank()>0&&previous.rank(entry.getKey())==0)view().expanded.add(entry.getKey());
             if (wasEditing != editMode()) {
                 if (preferences != null) preferences.save();
                 editorPreferences = null; layout = null; dirtyTrees.clear(); structureRevision++;
@@ -129,8 +140,9 @@ public final class ClientState {
         var all = new TreeMap<String, GraphLayout.Entry>();
         definitions.trees().values().forEach(t -> {
             var treeProgress = progress.trees().get(t.id());
-            if (!editMode() && (treeProgress == null || !treeProgress.discovered())) return;
-            all.put(t.id(), new GraphLayout.Entry(t.id(), "", t.id(), GraphLayout.Kind.TREE, List.of(), Set.of(), 0, 0, t.section()));
+            var promoted=PromotedTrees.root(definitions,t.id());
+            if (!editMode() && (treeProgress == null || !treeProgress.discovered() || !PromotedTrees.unlocked(definitions,progress,t.id(),worldTier()))) return;
+            all.put(t.id(), new GraphLayout.Entry(t.id(), promoted==null?"":promoted.id(), t.id(), GraphLayout.Kind.TREE, List.of(), Set.of(), 0, 0, t.section()));
             if (view().seenTrees.add(t.id())) view().expanded.add(t.id());
         });
         definitions.nodes().values().forEach(n -> {
@@ -147,18 +159,20 @@ public final class ClientState {
         entries = Collections.unmodifiableMap(all);
         if (editMode()) {
             view().expanded.addAll(all.keySet());
-            layout = GraphLayout.arrange(all.values(), Map.of(), all.keySet(), Map.of(), Set.of());
+            layout = GraphLayout.attachPromotedRoots(GraphLayout.arrange(all.values(), Map.of(), all.keySet(), Map.of(), Set.of()),all.values());
             view().anchors.clear(); view().anchors.putAll(layout.anchors());
             dirtyTrees.clear();
             return layout;
         }
-        layout = GraphLayout.arrange(all.values(), view().anchors, dirtyTrees, view().orientations, view().manualAnchors);
-        var positioned = new HashMap<>(layout.anchors());
-        var parents = GraphLayout.primaryParents(all.values());
-        GraphLayout.applyRelativeOffsets(positioned, parents, view().offsets, view().manualAnchors);
-        layout = new GraphLayout.Result(Map.copyOf(positioned), layout.depths(), layout.edges());
-        view().anchors.clear(); view().anchors.putAll(positioned);
-        view().offsets.clear(); view().offsets.putAll(GraphLayout.relativeOffsets(positioned, parents));
+        var restoredDirections = GraphLayout.restoreOrientations(all.values(), view().anchors, view().offsets, view().orientations);
+        restoredDirections.forEach((tree, direction) -> {
+            if (!direction.equals(view().orientations.get(tree))) dirtyTrees.add(tree);
+        });
+        view().orientations.clear(); view().orientations.putAll(restoredDirections);
+        layout = GraphLayout.restoreOffsets(GraphLayout.arrange(all.values(), view().anchors, dirtyTrees, view().orientations, view().manualAnchors),
+                all.values(),view().offsets,view().manualAnchors);
+        view().anchors.clear(); view().anchors.putAll(layout.anchors());
+        view().offsets.clear(); view().offsets.putAll(GraphLayout.relativeOffsets(layout.anchors(), GraphLayout.primaryParents(all.values())));
         dirtyTrees.clear();
         return layout;
     }
@@ -166,9 +180,19 @@ public final class ClientState {
 
     public static Set<String> visible() {
         layout();
-        if (editMode()) return Set.copyOf(entries.keySet());
-        Set<String> result = GraphPresentation.expandedNodes(entries,view().expanded);
-        return result;
+        Set<String> result = editMode()?new HashSet<>(entries.keySet()):GraphPresentation.expandedNodes(entries,view().expanded);
+        result.removeIf(id->PromotedTrees.root(definitions,id)!=null);
+        if(!editMode())result.removeIf(id->{
+            var node=definitions.nodes().get(id);
+            return node!=null&&node.spellModifier()&&progress.rank(id)==0&&!modifierAvailable(id);
+        });
+        return Set.copyOf(result);
+    }
+
+    public static boolean modifierAvailable(String id) {
+        if(!runtime.has("available_modifier_nodes"))return false;
+        for(var value:runtime.getAsJsonArray("available_modifier_nodes"))if(value.getAsString().equals(id))return true;
+        return false;
     }
 
     public static void reveal(String id) {
@@ -187,29 +211,34 @@ public final class ClientState {
     }
     public static boolean expandable(String id) {
         var entry = entries().get(id);
-        return !editMode() && entry != null && (entry.organizational() || entries.values().stream().anyMatch(n -> n.dependencies().contains(id)));
+        return !editMode() && entry != null && (entry.organizational() || definitions.nodes().containsKey(id)&&definitions.nodes().get(id).rootTree()!=null || entries.values().stream().anyMatch(n -> n.dependencies().contains(id)));
     }
     public static void moveSubtree(String id, double dx, double dy) {
         if (editMode()) return;
         layout();
         Set<String> moved = GraphLayout.translateSubtree(id, entries.values(), view().anchors, dx, dy);
         view().manualAnchors.addAll(moved);view().manualAnchors.removeAll(definitions.trees().keySet());
-        view().offsets.clear(); view().offsets.putAll(GraphLayout.relativeOffsets(view().anchors, GraphLayout.primaryParents(entries.values())));
-        layout = new GraphLayout.Result(Map.copyOf(view().anchors), layout.depths(), layout.edges());
+        layout = GraphLayout.attachPromotedRoots(new GraphLayout.Result(Map.copyOf(view().anchors), layout.depths(), layout.edges()),entries.values());
+        view().anchors.clear();view().anchors.putAll(layout.anchors());
+        view().offsets.clear(); view().offsets.putAll(GraphLayout.relativeOffsets(layout.anchors(), GraphLayout.primaryParents(entries.values())));
     }
     public static void orientTree(String id, String direction) {
-        if (editMode() || !definitions.trees().containsKey(id)) return;
+        String treeId=PromotedTrees.displayTree(definitions,id);
+        if (editMode() || treeId.isBlank()) return;
         layout();
-        String previous=view().orientations.getOrDefault(id,definitions.trees().get(id).section());
-        var moved=GraphLayout.rotateSubtree(id,entries.values(),view().anchors,previous,direction);
+        String previous=view().orientations.getOrDefault(treeId,definitions.trees().get(treeId).section());
+        var root=PromotedTrees.root(definitions,treeId);String anchor=root==null?id:root.id();
+        var moved=GraphLayout.rotateSubtree(anchor,entries.values(),view().anchors,previous,direction);
         view().manualAnchors.addAll(moved);
-        view().offsets.clear();view().offsets.putAll(GraphLayout.relativeOffsets(view().anchors,GraphLayout.primaryParents(entries.values())));
-        view().orientations.put(id, direction);
-        dirtyTrees.add(id); layout = null; revision++; structureRevision++;
+        layout=GraphLayout.attachPromotedRoots(new GraphLayout.Result(Map.copyOf(view().anchors),layout.depths(),layout.edges()),entries.values());
+        view().anchors.clear();view().anchors.putAll(layout.anchors());
+        view().offsets.clear();view().offsets.putAll(GraphLayout.relativeOffsets(layout.anchors(),GraphLayout.primaryParents(entries.values())));
+        view().orientations.put(treeId, direction);
+        dirtyTrees.add(treeId); layout = null; revision++; structureRevision++;
     }
     public static void reorganize() { view().anchors.clear(); view().manualAnchors.clear(); view().offsets.clear(); view().orientations.clear(); dirtyTrees.addAll(definitions.trees().keySet()); layout = null; revision++; structureRevision++; }
     public static String boundSpell(int slot) {
-        if(slot<0||slot>=capacity())return "";
+        if(slot<0||slot>=capacity()||slot>=com.cappleapple.mastery.spells.BindingSlots.limit(context()))return "";
         List<String> loadout = progress.loadouts().get(context());
         return loadout != null && slot >= 0 && slot < loadout.size() ? loadout.get(slot) : "";
     }

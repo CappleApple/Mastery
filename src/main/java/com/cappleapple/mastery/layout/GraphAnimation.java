@@ -6,8 +6,11 @@ import java.util.function.Function;
 public final class GraphAnimation {
     private record Motion(GraphLayout.Point from,GraphLayout.Point to,long start,double duration,boolean leaving){}
     private final Map<String,Motion> motions=new HashMap<>();
+    private boolean initialized;
+    /** A new or reopened view starts at its saved layout, including any expanded branches. */
+    public void reset(){motions.clear();initialized=false;}
     public void update(Map<String,GraphLayout.Point> target,Function<String,GraphLayout.Point> origin,long now,boolean enabled,double speed) {
-        if (!enabled) { motions.clear(); target.forEach((id, point) -> motions.put(id, new Motion(point, point, now, 0, false))); return; }
+        if (!enabled||!initialized) { initialized|=!target.isEmpty();motions.clear(); target.forEach((id, point) -> motions.put(id, new Motion(point, point, now, 0, false))); return; }
         var current=frame(now);double duration=enabled?250/Math.clamp(speed,.1,10):0;
         for(String id:new HashSet<>(motions.keySet()))if(!target.containsKey(id)&&!motions.get(id).leaving) {
             motions.put(id,new Motion(current.get(id),origin.apply(id),now,duration,true));

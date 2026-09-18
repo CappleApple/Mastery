@@ -1,0 +1,28 @@
+{
+  "name": "Skills That Become Trees",
+  "category": "mastery:skill_map",
+  "icon": "minecraft:blaze_powder",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "A New Specialization",
+      "text": "A skill can also open a new specialization. Buy the root skill through its original prerequisites and listed price. Its branch then has separate proficiency XP, levels, and skill points. Becoming a root does not remove its previous connections."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Flame Blade",
+      "text": "The bundled Flame Blade root combines Two-Handed and Fire practice. It requires both foundation skills, Two-Handed level 3, and Fire level 3. Its first rank costs one Two-Handed point. Its successors use Flame Blade points."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Training the Branch",
+      "text": "Flame Blade gains XP from two-handed melee Fire damage and from damage dealt by its unlocked skills, including Flaming Strike. The root grants +10% Two-Handed Weapon Fire Damage. Its outline shows progress toward the next level; its points are shown above the root."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Requirements Still Matter",
+      "text": "The root must remain purchased with its prerequisites and gates satisfied for its tree to gain XP or buy descendants. Losing access does not erase the tree's saved points or XP. Other data-defined roots can use different activities and prices."
+    }
+  ]
+}

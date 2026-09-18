@@ -26,6 +26,7 @@ public final class MasteryScreen extends Screen {
     private record RenderNode(String id, GraphLayout.Entry entry, String label, ItemStack icon, ResourceLocation customIcon, ResourceLocation texture, boolean expandable) {}
     private record RenderEdge(GraphLayout.Edge edge, GraphLayout.Point from, GraphLayout.Point to) {}
     private final Map<String,TreeTheme> resolvedThemes=new HashMap<>();
+    private final Map<String,ConnectionPresentation> resolvedConnections=new HashMap<>();
     private final Map<String,NodeAppearance> resolvedAppearances=new HashMap<>();
     private long themeRevision=-1;
     private long projectionRevision=-1;
@@ -70,6 +71,7 @@ public final class MasteryScreen extends Screen {
         return SPRITES.computeIfAbsent(name, n -> ResourceLocation.fromNamespaceAndPath("mastery", "graph/" + n));
     }
     @Override protected void init() {
+        animation.reset();
         cachedEditMode = ClientState.editMode();
         contextMenu = null;
         search = addRenderableWidget(new EditBox(font, Math.max(150, width - 180), 11, Math.min(165, width - 160), 18, Component.literal("Search discovered skills")));
@@ -102,7 +104,7 @@ public final class MasteryScreen extends Screen {
         String error = ClientState.runtime().has("last_error") ? ClientState.runtime().get("last_error").getAsString() : "";
         String status = ClientState.editMode()
                 ? !EditorClient.status().isBlank() ? EditorClient.status() : "EDIT MODE | Right-click a tree or skill to edit | Default positions"
-                : !error.isBlank() ? error : !searchNotice.isBlank() ? searchNotice : "Hold to unlock | Left-click for details | Right-click to expand";
+                : !error.isBlank() ? error : !searchNotice.isBlank() ? searchNotice : "";
         cachedEditorStatus = EditorClient.status();
         footerLines = font.split(Component.literal(status), Math.max(80, width - 18));
         left = 8; top = 62; bottom = height - 12 - Math.min(3, footerLines.size()) * 12;
@@ -157,7 +159,10 @@ public final class MasteryScreen extends Screen {
             var a = layout.anchors().get(edge.from()); var b = layout.anchors().get(edge.to());
             if (a != null && b != null) nextEdges.add(new RenderEdge(edge, a, b));
         }
-        edges = List.copyOf(nextEdges);
+        edges = com.cappleapple.mastery.layout.GraphPresentation.transitionEdges(edges.stream().map(RenderEdge::edge).toList(),
+                nextEdges.stream().map(RenderEdge::edge).toList(),visible,displayPositions.keySet()).stream()
+                .filter(e->ClientState.entries().containsKey(e.from())&&ClientState.entries().containsKey(e.to()))
+                .map(e->new RenderEdge(e,layout.anchors().get(e.from()),layout.anchors().get(e.to()))).toList();
         String selected = ClientState.view().selected;
         var entry = ClientState.entries().get(selected);
         var relevant = new HashSet<String>();
@@ -201,7 +206,7 @@ public final class MasteryScreen extends Screen {
         double zoom=ClientState.view().zoom, minimum=com.cappleapple.mastery.config.MasteryClientConfig.MINIMUM_NODE_WIDTH.get();
         var bounds=new HashMap<String,com.cappleapple.mastery.layout.ReadableZoom.Bounds>();
         animatedNodes.forEach((id,node)->bounds.put(id,new com.cappleapple.mastery.layout.ReadableZoom.Bounds(
-                appearance(id).showName()?Math.max(52,font.width(node.label())+4):52,appearance(id).showName()?78:52)));
+                (appearance(id).showName()?Math.max(52,font.width(node.label())+4):52)*appearanceScale(id),(appearance(id).showName()?78:52)*appearanceScale(id))));
         var rawTargets=displayTargets();
         if(zoom!=projectedZoom||minimum!=projectedMinimum||projectionRevision!=ClientState.definitionRevision()||!rawTargets.equals(projectedSource)) {
             projectedTargets=com.cappleapple.mastery.layout.ReadableZoom.project(rawTargets,zoom,minimum,bounds);
@@ -213,6 +218,7 @@ public final class MasteryScreen extends Screen {
         animationPositions=animation.frame(net.minecraft.Util.getMillis());
         // Separate destinations only; both transition directions may overlap in flight.
         displayPositions=animationPositions;
+        edges=edges.stream().filter(e->displayPositions.containsKey(e.edge().from())&&displayPositions.containsKey(e.edge().to())).toList();
         animatedNodes.keySet().removeIf(id->!displayPositions.containsKey(id)&&!targetVisible.contains(id));
     }
     private void refreshEdgePositions() {
@@ -249,8 +255,7 @@ public final class MasteryScreen extends Screen {
                     () -> MasteryNetwork.sendAction("toggle", node.id(), "", active ? 0 : 1), rank > 0);
             y -= 23;
         }
-        actionButton(rank >= node.maxRank() ? "Maximum rank" : "Hold node for rank " + (rank + 1), x, y, w,
-                () -> {}, false);
+
     }
     private static String modifierSpell(NodeDefinition node) {
         if (!node.spell().isBlank()) return node.spell();
@@ -272,7 +277,7 @@ public final class MasteryScreen extends Screen {
             clearWidgets(); init(); return;
         }
         if (!cachedEditorStatus.equals(EditorClient.status())) calculateBounds();
-        if (cachedStructureRevision != ClientState.structureRevision()) rebuild();
+        if (cachedStructureRevision != ClientState.structureRevision() || !targetVisible.equals(ClientState.visible())) rebuild();
         else if (cachedRevision != ClientState.revision()) refreshDetails();
     }
     @Override public void tick() {
@@ -353,8 +358,8 @@ public final class MasteryScreen extends Screen {
         var view = ClientState.view();
         double originX = (left + right) / 2.0 + view.panX, originY = (top + bottom) / 2.0 + view.panY;
         double nodeScale=nodeScale();
-        double minX = (left - originX) / view.zoom - NODE_W*nodeScale, maxX = (right - originX) / view.zoom + NODE_W*nodeScale;
-        double minY = (top - originY) / view.zoom - NODE_H*nodeScale, maxY = (bottom - originY) / view.zoom + NODE_H*nodeScale;
+        double minX = (left - originX) / view.zoom - NODE_W*nodeScale*16, maxX = (right - originX) / view.zoom + NODE_W*nodeScale*16;
+        double minY = (top - originY) / view.zoom - NODE_H*nodeScale*16, maxY = (bottom - originY) / view.zoom + NODE_H*nodeScale*16;
         updateAnimation();
         hovered = inCanvas(mouseX, mouseY) ? hit(mouseX, mouseY) : "";
         graphics.pose().pushPose();
@@ -378,9 +383,10 @@ public final class MasteryScreen extends Screen {
             graphics.pose().scale((float)(1/view.zoom),(float)(1/view.zoom),1);
             int length=(int)(Math.hypot(dx,dy)*view.zoom), radius=edge.edge().synergy()?4:3;
             TreeTheme theme=theme(edge.edge().to());
+            boolean dashed=connectionStyle(edge.edge())==ConnectionPresentation.Style.DASHED;
             for(int band=-radius;band<=radius;band++) {
                 int color=ThemePalette.color(theme,1-Math.abs(band)/(double)radius,nodeState(edge.edge().to()),alpha);
-                if(edge.edge().synergy()) for(int segment=0;segment<length;segment+=14)
+                if(dashed) for(int segment=0;segment<length;segment+=14)
                     NodeShapes.rectangle(graphics,segment,band,Math.min(length,segment+10),band+1,color);
                 else NodeShapes.rectangle(graphics,0,band,length,band+1,color);
             }
@@ -438,6 +444,7 @@ public final class MasteryScreen extends Screen {
         return Math.clamp((net.minecraft.Util.getMillis()-holdStartedAt-holdDelayMs)/1000.0,0,1);
     }
     private void renderNode(GuiGraphics graphics, RenderNode node, GraphLayout.Point p) {
+        if(node.entry().kind()==GraphLayout.Kind.TREE?!ClientState.definitions().trees().containsKey(node.id()):!ClientState.definitions().nodes().containsKey(node.id()))return;
         graphics.pose().pushPose();
         double holdProgress=holdVisualProgress();
         boolean charging=node.id().equals(pressedNode)&&hold.active()&&holdProgress>0&&!purchaseSent;
@@ -446,6 +453,7 @@ public final class MasteryScreen extends Screen {
             graphics.pose().translate(Math.sin(time)*amplitude,Math.cos(time*1.3)*amplitude*.5,0);
         }
         var state=nodeState(node.id());var colors=theme(node.id());var look=appearance(node.id());var shape=look.shape();
+        float size=(float)appearanceScale(node.id());graphics.pose().scale(size,size,1);
         if(node.id().equals(ClientState.view().selected))NodeShapes.fill(graphics,shape,26,ThemePalette.color(colors,1,state,1));
         else if(node.id().equals(hovered))NodeShapes.fill(graphics,shape,25,ThemePalette.color(colors,1,state,.7));
         for(int ring=0;ring<4;ring++)NodeShapes.fill(graphics,shape,24-ring,ThemePalette.color(colors,ring/3.0,state,1));
@@ -460,28 +468,43 @@ public final class MasteryScreen extends Screen {
         else if(state==ThemePalette.State.DISABLED)inner=((int)(((inner>>16)&255)*.4)<<16)|((int)(((inner>>8)&255)*.4)<<8)|(int)((inner&255)*.4);
         NodeShapes.fill(graphics,shape,20,0xFF000000|inner);
         NodeShapes.fill(graphics,shape,17,0xFF2F2B24);
-        if(node.entry().kind()==GraphLayout.Kind.TREE&&!ClientState.editMode()) {
-            var tree=ClientState.definitions().trees().get(node.id());var progress=ClientState.progress().trees().get(node.id());
+        String experienceTree=PromotedTrees.displayTree(ClientState.definitions(),node.id());
+        if(!experienceTree.isBlank()&&!ClientState.editMode()) {
+            var tree=ClientState.definitions().trees().get(experienceTree);var progress=ClientState.progress().trees().get(experienceTree);
             int level=progress==null?0:progress.level();double xp=progress==null?0:progress.xp();
             NodeShapes.outlineProgress(graphics,shape,20,3,0xFF574D39,1);
             NodeShapes.outlineProgress(graphics,shape,20,3,0xFFFFE394,com.cappleapple.mastery.layout.ShapeOutline.experience(xp,tree.xpForLevel(level),level,tree.levelCap(ClientState.worldTier())));
         }
         graphics.flush(); // Submit every border span together before drawing the icon.
-        if(!node.icon().isEmpty())graphics.renderItem(node.icon(),-8,-8);
-        else if(node.customIcon()!=null)graphics.blit(node.customIcon(),-8,-8,0,0,16,16,16,16);
-        else graphics.blitSprite(sprite("rune"),-8,-8,16,16);
+        int iconY=-8+shape.iconOffsetY(17);
+        if(!node.icon().isEmpty())graphics.renderItem(node.icon(),-8,iconY);
+        else if(node.customIcon()!=null)graphics.blit(node.customIcon(),-8,iconY,0,0,16,16,16,16);
+        else graphics.blitSprite(sprite("rune"),-8,iconY,16,16);
         if(charging) {
             NodeShapes.fillProgress(graphics,shape,17,ThemePalette.color(colors,.8,ThemePalette.State.ENABLED,.38),holdProgress,unlockSettings(node.id()).fillDirection().equals("horizontal"));
             graphics.flush();
         }
+        if(!experienceTree.isBlank()&&!ClientState.editMode()) {
+            var progress=ClientState.progress().trees().get(experienceTree);String points=Integer.toString(progress==null?0:progress.points());
+            int half=font.width(points)/2;graphics.fill(-half-3,-34,half+4,-22,0xDD211E18);graphics.drawCenteredString(font,points,0,-32,0xFFFFDC88);
+        }
         if(look.showName())graphics.drawCenteredString(font,node.label(),0,28,state==ThemePalette.State.ENABLED?0xF5EBD0:0x888888);
         graphics.pose().popPose();
+    }
+    private double appearanceScale(String id) {
+        return appearance(id).scaleFor(!PromotedTrees.displayTree(ClientState.definitions(),id).isBlank());
     }
     private com.cappleapple.mastery.data.NodeAppearance appearance(String id) {
         refreshPresentation();
         return resolvedAppearances.computeIfAbsent(id,key->NodeAppearance.parse(SettingsResolver.forNode(ClientState.definitions(),key).getAsJsonObject("appearance")));
     }
-    private void refreshPresentation(){if(themeRevision!=ClientState.definitionRevision()){resolvedThemes.clear();resolvedAppearances.clear();themeRevision=ClientState.definitionRevision();}}
+    private void refreshPresentation(){if(themeRevision!=ClientState.definitionRevision()){resolvedThemes.clear();resolvedAppearances.clear();resolvedConnections.clear();themeRevision=ClientState.definitionRevision();}}
+    private ConnectionPresentation.Style connectionStyle(GraphLayout.Edge edge) {
+        refreshPresentation();
+        String owner=edge.synergy()?edge.to():edge.from();
+        var settings=resolvedConnections.computeIfAbsent(owner,id->ConnectionPresentation.parse(SettingsResolver.forNode(ClientState.definitions(),id).getAsJsonObject("connections")));
+        return edge.synergy()?settings.parentLineStyle():settings.childLineStyle();
+    }
     private TreeTheme theme(String id) {
         refreshPresentation();
         return resolvedThemes.computeIfAbsent(id,key->TreeTheme.parse(SettingsResolver.forNode(ClientState.definitions(),key).getAsJsonObject("theme")));
@@ -518,7 +541,7 @@ public final class MasteryScreen extends Screen {
         for (int i = nodes.size() - 1; i >= 0; i--) {
             String id = nodes.get(i).id();
             GraphLayout.Point p = displayPositions.getOrDefault(id,ClientState.layout().anchors().get(id));
-            if (p != null && appearance(id).shape().contains((gx-p.x())/nodeScale(),(gy-p.y())/nodeScale(),24)) return id;
+            if (p != null && appearance(id).shape().contains((gx-p.x())/(nodeScale()*appearanceScale(id)),(gy-p.y())/(nodeScale()*appearanceScale(id)),24)) return id;
         }
         return "";
     }
@@ -576,7 +599,7 @@ public final class MasteryScreen extends Screen {
             if (!pressedNode.isBlank()) {
                 if (dragging && !ClientState.editMode()) {
                     var entry = ClientState.entries().get(pressedNode);
-                    if (entry != null && entry.kind() == GraphLayout.Kind.TREE) {
+                    if (entry != null && !PromotedTrees.displayTree(ClientState.definitions(),pressedNode).isBlank()) {
                         GraphLayout.Point anchor = ClientState.layout().anchors().get(pressedNode);
                         String side = GraphLayout.sectionAt(anchor.x(), anchor.y());
                         ClientState.orientTree(pressedNode, side);
@@ -634,7 +657,7 @@ public final class MasteryScreen extends Screen {
             actions.add(new EditorContextMenu.Action("Edit definition", () -> EditorClient.edit(this, id), false));
             actions.add(new EditorContextMenu.Action("Add child", () -> EditorClient.addChild(this, id), false));
             var spellNode=ClientState.definitions().nodes().get(id);
-            var rewards=spellNode!=null&&!spellNode.spell().isBlank()&&!spellNode.modifier().isBlank()?List.of(spellNode.spell()):NodeDetails.spells(spellNode);
+            var rewards=spellNode!=null&&!spellNode.spell().isBlank()&&spellNode.spellModifier()?List.of(spellNode.spell()):NodeDetails.spells(spellNode);
             if(!rewards.isEmpty())actions.add(new EditorContextMenu.Action("Edit spell upgrades",()->{
                 if(rewards.size()==1)EditorClient.editSpell(this,rewards.getFirst());
                 else minecraft.setScreen(new EditorChoiceScreen(this,"Choose spell upgrades",rewards,spell->EditorClient.editSpell(this,spell)));

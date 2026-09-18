@@ -34,6 +34,17 @@ public final class ShapeOutline {
             case DIAMOND -> new double[][]{{0,-radius},{radius,0},{0,radius},{-radius,0},{0,-radius}};
             default -> new double[][]{{0,-radius},{radius*.5,-radius},{radius,0},{radius*.5,radius},{-radius*.5,radius},{-radius,0},{-radius*.5,-radius},{0,-radius}};
         };
+        if(shape==Shape.PENTAGON||shape==Shape.TRIANGLE) {
+            if(shape==Shape.TRIANGLE)points=new double[][]{{0,-radius},{radius,radius},{-radius,radius},{0,-radius}};
+            else {points=new double[6][2];for(int i=0;i<6;i++){double a=-Math.PI/2+i*2*Math.PI/5;points[i]=new double[]{Math.cos(a)*radius,Math.sin(a)*radius};}}
+            // Intersect the ray with the actual polygon before measuring perimeter distance.
+            for(int i=1;i<points.length;i++) {
+                double ax=points[i-1][0],ay=points[i-1][1],sx=points[i][0]-ax,sy=points[i][1]-ay,den=dx*sy-dy*sx;
+                if(Math.abs(den)<1e-12)continue;
+                double distance=(ax*sy-ay*sx)/den,t=(ax*dy-ay*dx)/den;
+                if(distance>=0&&t>=-1e-9&&t<=1+1e-9){px=dx*distance;py=dy*distance;break;}
+            }
+        }
         double total=0,travel=0,bestDistance=Double.POSITIVE_INFINITY,bestTravel=0;
         for(int i=1;i<points.length;i++)total+=Math.hypot(points[i][0]-points[i-1][0],points[i][1]-points[i-1][1]);
         for(int i=1;i<points.length;i++) {

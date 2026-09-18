@@ -17,6 +17,8 @@ def write(path, data):
 def resource(kind, name, data, namespace='mastery'):
     if kind == 'trees' and name in ('one_handed', 'two_handed', 'dual_wield', 'bow', 'crossbow'):
         data['effect_context'] = 'mastery:' + name
+    if kind == 'trees' and name in schools:
+        data['damage_filter'] = dict(elements=['irons_spellbooks:' + name])
     write(f'{namespace}/mastery/{kind}/{name}.json', data)
 
 
@@ -164,19 +166,43 @@ node('fire/secret_capacity', 'fire', 'Secret Spell Preparation', dependencies=['
      description='An additional prepared-spell capacity within the branch revealed by the Fire Secrets skill book.')
 
 synergies = [
-    ('spellblade_practice', 'Spellblade Practice', 'two_handed', 'fire',
+    ('spellblade_practice', 'Flame Blade', 'two_handed', 'fire',
      attribute('minecraft:generic.attack_damage', .5)),
     ('steady_aim', 'Steady Aim', 'bow', 'crossbow', attribute('minecraft:generic.knockback_resistance', .05)),
     ('arcane_resilience', 'Arcane Resilience', 'holy', 'shields', attribute('irons_spellbooks:spell_resist', .05)),
     ('ore_mastery', 'Ore Mastery', 'mining', 'smithing', attribute('minecraft:player.block_break_speed', .2)),
 ]
 for id, name, owner, other, effect in synergies:
-    resource('synergies', id, dict(tree='mastery:' + owner, name=name,
+    value = dict(tree='mastery:' + owner, name=name,
         description=f'A passive bonus earned through {trees[owner][0]} and {trees[other][0]} practice.',
         icon='minecraft:' + trees[other][1], type='synergy', cost=1, max_rank=1, level=3, visibility='available',
         dependencies=[{'node': 'mastery:' + owner + '/foundation', 'rank': 1},
                       {'node': 'mastery:' + other + '/foundation', 'rank': 1}],
-        requirements=[{'type': 'mastery:tree_level', 'tree': 'mastery:' + other, 'level': 3}], effects=[effect]))
+        requirements=[{'type': 'mastery:tree_level', 'tree': 'mastery:' + other, 'level': 3}], effects=[effect])
+    if id == 'spellblade_practice':
+        value['description'] = 'Combine Two-Handed and Fire practice to unlock a separate Flame Blade specialization.'
+        value['description'] = ''
+        value['root_tree'] = dict(id='mastery:flame_blade', xp_base=25, xp_growth=10, point_every=1,
+                                  xp_attribute='mastery:flame_blade_experience_gain', section='southeast')
+        value['effects'] = [dict(attribute('mastery:fire_weapon_damage', .1), context='mastery:two_handed', display_name='Two-Handed Weapon Fire Damage')]
+    resource('synergies', id, value)
+
+node('flame_blade/flame_edge', 'two_handed', 'Flame Edge', dependencies=['mastery:spellblade_practice'],
+     max_rank=3, icon='minecraft:blaze_powder', effects=[attribute('mastery:fire_weapon_damage', .1)],
+     description='Each rank adds 10% of weapon damage as Fire.')
+node('flame_blade/tempered_flame', 'two_handed', 'Tempered Flame', dependencies=['mastery:flame_blade/flame_edge'],
+     max_rank=3, icon='minecraft:blaze_powder', effects=[attribute('mastery:fire_damage', .1)], description='Each rank adds 10% Fire damage.')
+
+
+resource('nodes', 'flame_blade/flaming_strike', dict(tree='mastery:flame_blade', name='Flaming Strike',
+    description='', icon='irons_spellbooks:textures/gui/spell_icons/flaming_strike.png', type='active',
+    cost=1, max_rank=5, level=0, dependencies=[dict(node='mastery:spellblade_practice', rank=1)],
+    effects=[dict(type='mastery:unlock_spell', spell='irons_spellbooks:flaming_strike', level=1, levels_per_rank=1)],
+    visibility='available', spell='irons_spellbooks:flaming_strike'))
+resource('spells', 'flaming_strike', dict(spell='irons_spellbooks:flaming_strike', tree='mastery:flame_blade',
+    name='Flaming Strike', description='', icon='irons_spellbooks:textures/gui/spell_icons/flaming_strike.png',
+    contexts=['mastery:' + context for context in contexts], modifier_slots='default', level=1, charge='default'),
+    namespace='irons_spellbooks')
 
 
 def xp(id, tree, event, amount, condition, scale='none', **extra):
@@ -193,6 +219,7 @@ xp('crossbow_damage', 'crossbow', 'damage', 1, {'projectile': True, 'weapon_cont
 xp('shield_blocks', 'shields', 'block', 1, {}, 'damage')
 for school in schools:
     xp(school + '_damage', school, 'damage', 1, {'school': 'irons_spellbooks:' + school}, 'damage')
+xp('flame_blade_damage', 'flame_blade', 'damage', 1, {'context': 'mastery:two_handed', 'melee': True, 'projectile': False, 'school': 'irons_spellbooks:fire'}, 'damage')
 xp('mining_blocks', 'mining', 'block_break', 2, {'block_tag': 'mastery:mineable'})
 xp('smithing_craft', 'smithing', 'craft', 4, {'item_tag': 'mastery:smithing_materials'}, 'amount')
 xp('smithing_smelt', 'smithing', 'smelt', 3, {'item_tag': 'mastery:smithing_materials'}, 'amount')
@@ -200,4 +227,4 @@ xp('engineering_craft', 'engineering', 'craft', 4, {'item_tag': 'mastery:enginee
 xp('alchemy_brew', 'alchemy', 'brew', 5, {})
 xp('mobility_travel', 'mobility', 'travel', 1, {'sprinting': True}, 'distance')
 xp('survival_food', 'survival', 'consume', 2, {})
-print(f'Generated {len(trees)} independent trees, 55 progression nodes and {len(schools)} native spell bindings.')
+print(f'Generated {len(trees)} independent trees, 57 progression nodes plus the promoted Flame Blade tree and {len(schools)} native spell bindings.')

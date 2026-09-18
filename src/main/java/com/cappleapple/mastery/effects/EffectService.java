@@ -38,7 +38,7 @@ public final class EffectService {
             }
         });
         EffectRegistry.Handler declarative=(p,n,r,e)->{};
-        for(String type:List.of("mastery:trigger","mastery:bonus","mastery:spell_modifier","mastery:unlock_spell","mastery:unlock_context"))EffectRegistry.register(type,declarative);
+        for(String type:List.of("mastery:keyword_modifier","mastery:trigger","mastery:experience_gain","mastery:bonus","mastery:spell_modifier","mastery:unlock_spell","mastery:unlock_context"))EffectRegistry.register(type,declarative);
         EffectRegistry.register("mastery:on_usage",new EffectRegistry.Handler() {
             @Override public void apply(ServerPlayer p,String n,int r,JsonObject e) {}
             @Override public void onUsage(ServerPlayer p,String n,int r,JsonObject e,String event,JsonObject context) {
@@ -61,7 +61,7 @@ public final class EffectService {
     public static int effectiveRank(ServerPlayer player,NodeDefinition node) {
         var state=MasteryRuntime.progress(player).nodes().get(node.id());
         if(state==null||!state.toggled()) return 0;
-        if(!node.modifier().isBlank()&&MasteryRuntime.progress(player).activeModifiers().values().stream().noneMatch(ids->ids.contains(node.id()))) return 0;
+        if(node.spellModifier()&&MasteryRuntime.progress(player).activeModifiers().values().stream().noneMatch(ids->ids.contains(node.id()))) return 0;
         return eligibleRank(player,node);
     }
     /** Rank prerequisites depend on investment and gates, never on ancestor activation switches. */
@@ -73,6 +73,7 @@ public final class EffectService {
         if(!com.cappleapple.mastery.progression.ProgressionService.bookUnlocked(MasteryRuntime.definitions(),progress,node.id())){visiting.remove(node.id());return 0;}
         var tree=MasteryRuntime.definitions().trees().get(node.tree()); int tier=MasteryRuntime.worldTier(player);
         if(rank<=0 || tree==null){visiting.remove(node.id());return 0;}
+        if(!com.cappleapple.mastery.data.PromotedTrees.unlocked(MasteryRuntime.definitions(),progress,node.tree(),tier,r->RequirementRegistry.test(new RequirementContext(player,new JsonObject()),r))){visiting.remove(node.id());return 0;}
         var cap=tree.capAt(tier);
         if(tier>=0 && tier<node.worldTier() || Math.min(progress.tree(node.tree()).level(),tree.levelCap(tier))<node.level()){visiting.remove(node.id());return 0;}
         if(cap.maxRank()>=0)rank=Math.min(rank,cap.maxRank());

@@ -11,11 +11,22 @@ public final class BonusText {
         var lines=new ArrayList<String>();String type=text(effect,"type","");
         if(effect.has("attribute")) {
             String id=effect.get("attribute").getAsString();boolean percent=!text(effect,"operation","add_value").equals("add_value")||percentAttribute.test(id)||masteryFraction(id);
-            lines.add(signed(number(effect,"amount",0)*rank*(percent?100:1))+(percent?"%":"")+" "+attributeName.apply(id));
+            lines.add(signed(number(effect,"amount",0)*rank*(percent?100:1))+(percent?"%":"")+" "+(text(effect,"display_name","").isBlank()?attributeName.apply(id):text(effect,"display_name","")));
         } else if(type.equals("mastery:spell_modifier")||type.equals("spell_modifier")) {
+            if(effect.has("extra_charges")&&number(effect,"extra_charges",0)>0)lines.add(signed(Math.min(10000,number(effect,"extra_charges",0)*rank))+" Spell Charges");
             if(effect.has("spell_level"))lines.add(signed(number(effect,"spell_level",0)*rank)+" Spell Level");
             for(String key:List.of("mana_multiplier","cooldown_multiplier","cast_time_multiplier"))if(effect.has(key))
                 lines.add(signed((Math.pow(number(effect,key,1),rank)-1)*100)+"% "+switch(key){case "mana_multiplier"->"Mana Cost";case "cooldown_multiplier"->"Cooldown";default->"Cast Time";});
+        } else if(type.equals("mastery:keyword_modifier")) {
+            String keyword=attributeName.apply(text(effect,"keyword",""));
+            for(String stat:List.of("stacks","damage","duration"))for(boolean percent:List.of(false,true)) {
+                double amount=number(effect,stat+(percent?"_percent":""),0)*rank;
+                if(amount==0)continue;
+                String suffix=percent?"%":stat.equals("duration")?"s":"";
+                lines.add(signed(amount*(percent?100:stat.equals("duration")?.05:1))+suffix+" "+keyword+" "+(stat.equals("stacks")?"applied stacks":stat));
+            }
+        } else if(type.equals("mastery:experience_gain")) {
+            lines.add(signed(number(effect,"amount",0)*rank*100)+"% "+(text(effect,"tree","").isBlank()?"Overall":text(effect,"tree",""))+" XP Gain");
         } else if(type.equals("mastery:bonus")||type.equals("bonus")) {
             String label=switch(text(effect,"key","")){case "active_capacity","spell_slots"->"Spell Slots";case "modifier_slots"->"Modifier Slots";default->text(effect,"key","Bonus").replace('_',' ');};
             lines.add(signed(number(effect,"amount",0)*rank)+" "+label);
@@ -24,6 +35,7 @@ public final class BonusText {
     }
     /** Mastery's registered additive fractions are stored in ordinary ranged attributes. */
     public static boolean masteryFraction(String id) {
+        if(id.equals("mastery:experience_gain")||(id.startsWith("mastery:")&&id.endsWith("_experience_gain")))return true;
         if(id.equals("mastery:elemental_damage")||id.equals("mastery:proc_chance"))return true;
         if(!id.startsWith("mastery:"))return false;
         String path=id.substring(8);

@@ -29,7 +29,7 @@ public final class DefinitionEditorScreen extends Screen {
     private JsonObject formDraft;
 
     public DefinitionEditorScreen(MasteryScreen parent, String kind, String id, JsonObject definition, long revision, boolean creating) {
-        super(Component.literal((creating ? "Add " : "Edit ") + (kind.equals("trees") ? "tree" : kind.equals("spells")?"spell upgrade":kind.equals("settings")?"global defaults":"node") + " definition"));
+        super(Component.literal((creating ? "Add " : "Edit ") + (kind.equals("trees") ? "tree" : kind.equals("spells")?"spell upgrade":kind.equals("settings")?"global defaults":kind.equals("classes")?"class":"node") + " definition"));
         this.parent = parent; this.kind = kind; this.initialId = id; this.draftId = id;
         this.draft = this.originalText = PRETTY.toJson(definition); this.revision = revision; this.creating = creating;
     }

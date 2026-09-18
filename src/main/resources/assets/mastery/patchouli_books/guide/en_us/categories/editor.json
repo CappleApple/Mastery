@@ -1,6 +1,6 @@
 {
   "name": "Operator Workshop",
-  "description": "Author skills, elemental damage, triggers, keywords, and crafted bonuses. Visible while your server has enabled edit mode.",
+  "description": "Author classes, skill roots, XP bonuses, typed damage, combat scripts, and crafted bonuses. Visible while your server has enabled edit mode.",
   "icon": "minecraft:writable_book",
   "sortnum": 3,
   "flag": "mastery_edit_mode"

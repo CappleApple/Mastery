@@ -12,7 +12,7 @@ import java.util.Set;
 
 /** Authoritative persistent state. Mutate only on the server thread through validated services. */
 public final class PlayerProgress {
-    public static final int FORMAT_VERSION = 3;
+    public static final int FORMAT_VERSION = 4;
     private final Map<String, TreeProgress> trees = new LinkedHashMap<>();
     private final Map<String, NodeProgress> nodes = new LinkedHashMap<>();
     private final Map<String, List<String>> loadouts = new LinkedHashMap<>();
@@ -20,6 +20,18 @@ public final class PlayerProgress {
     private final Set<String> bookUnlocks = new LinkedHashSet<>();
     private final Set<String> usageGrants = new LinkedHashSet<>();
     private long sequence;
+    private String selectedClass = "";
+    private boolean classRewardsGranted;
+    private final List<JsonObject> pendingClassItems = new ArrayList<>();
+    public List<JsonObject> pendingClassItems() { return pendingClassItems; }
+    private com.cappleapple.mastery.classes.ClassSelectionState classSelection;
+    public String selectedClass() { return selectedClass; }
+    public void selectedClass(String value) { selectedClass = value == null ? "" : value; }
+    public boolean classRewardsGranted() { return classRewardsGranted; }
+    public void classRewardsGranted(boolean value) { classRewardsGranted = value; }
+    public com.cappleapple.mastery.classes.ClassSelectionState classSelection() { return classSelection; }
+    public void classSelection(com.cappleapple.mastery.classes.ClassSelectionState value) { classSelection = value; }
+
     private String bindingMode="hotbar";
     public String bindingMode(){return bindingMode;}
     public void bindingMode(String value){if(!value.equals("hotbar")&&!value.equals("quick_cast"))throw new IllegalArgumentException("Unknown binding mode");bindingMode=value;}
@@ -34,7 +46,7 @@ public final class PlayerProgress {
         return loadouts.computeIfAbsent(context, ignored -> new ArrayList<>(List.of("", "", "", "")));
     }
     public void bind(String context,int slot,String spell) {
-        if(slot<0||slot>=com.cappleapple.mastery.spells.BindingSlots.LIMIT)throw new IllegalArgumentException("Invalid spell slot");
+        if(slot<0||slot>=com.cappleapple.mastery.spells.BindingSlots.limit(context))throw new IllegalArgumentException("Invalid spell slot");
         var slots=loadout(context);while(slots.size()<=slot)slots.add("");slots.set(slot,spell);
     }
     public Map<String, Set<String>> activeModifiers() { return activeModifiers; }
@@ -59,6 +71,11 @@ public final class PlayerProgress {
         root.addProperty("version", FORMAT_VERSION);
         root.addProperty("sequence", sequence);
         root.addProperty("binding_mode", bindingMode);
+        root.addProperty("selected_class", selectedClass);
+        root.addProperty("class_rewards_granted", classRewardsGranted);
+        JsonArray pendingItems = new JsonArray(); pendingClassItems.forEach(item -> pendingItems.add(item.deepCopy()));
+        root.add("pending_class_items", pendingItems);
+        if (classSelection != null) root.add("class_selection_state", classSelection.toJson());
         JsonObject treeJson = new JsonObject();
         trees.forEach((id, tree) -> {
             JsonObject value = new JsonObject();
@@ -84,7 +101,7 @@ public final class PlayerProgress {
         JsonObject loadoutJson = new JsonObject();
         loadouts.forEach((id, slots) -> {
             JsonArray values = new JsonArray();
-            for (int slot = 0; slot < Math.min(com.cappleapple.mastery.spells.BindingSlots.LIMIT,Math.max(4,slots.size())); slot++) values.add(slot < slots.size() && slots.get(slot) != null ? slots.get(slot) : "");
+            for (int slot = 0; slot < Math.min(com.cappleapple.mastery.spells.BindingSlots.limit(id),Math.max(4,slots.size())); slot++) values.add(slot < slots.size() && slots.get(slot) != null ? slots.get(slot) : "");
             loadoutJson.add(id, values);
         });
         root.add("loadouts", loadoutJson);
@@ -108,6 +125,17 @@ public final class PlayerProgress {
     public static PlayerProgress fromJson(JsonObject root) {
         PlayerProgress result = new PlayerProgress();
         if(root.has("binding_mode")&&root.get("binding_mode").isJsonPrimitive()&&root.get("binding_mode").getAsString().equals("quick_cast"))result.bindingMode="quick_cast";
+        if (root.has("selected_class") && root.get("selected_class").isJsonPrimitive()
+                && root.get("selected_class").getAsJsonPrimitive().isString()) {
+            String id = root.get("selected_class").getAsString();
+            if (id.matches("[a-z0-9_.-]+:[a-z0-9/._-]+")) result.selectedClass = id;
+        }
+        result.classRewardsGranted = boolValue(root, "class_rewards_granted", false) || !result.selectedClass.isBlank();
+        if (root.has("pending_class_items") && root.get("pending_class_items").isJsonArray())
+            for (JsonElement item : root.getAsJsonArray("pending_class_items"))
+                if (item.isJsonObject()) result.pendingClassItems.add(item.getAsJsonObject().deepCopy());
+        if (root.has("class_selection_state") && root.get("class_selection_state").isJsonObject())
+            result.classSelection = com.cappleapple.mastery.classes.ClassSelectionState.fromJson(root.getAsJsonObject("class_selection_state"));
         result.sequence = Math.max(0, longValue(root, "sequence", 0));
         for (var entry : object(root, "trees").entrySet()) {
             if (!entry.getValue().isJsonObject()) continue;
@@ -134,7 +162,7 @@ public final class PlayerProgress {
             if (!entry.getValue().isJsonArray()) continue;
             JsonArray values = entry.getValue().getAsJsonArray();
             List<String> slots = result.loadout(entry.getKey());
-            for (int slot = 0; slot < Math.min(com.cappleapple.mastery.spells.BindingSlots.LIMIT, values.size()); slot++) {
+            for (int slot = 0; slot < Math.min(com.cappleapple.mastery.spells.BindingSlots.limit(entry.getKey()), values.size()); slot++) {
                 JsonElement value = values.get(slot);
                 if (value.isJsonPrimitive() && value.getAsJsonPrimitive().isString()) result.bind(entry.getKey(),slot,value.getAsString());
             }

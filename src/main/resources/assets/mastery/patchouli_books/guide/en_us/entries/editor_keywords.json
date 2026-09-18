@@ -8,7 +8,7 @@
     {
       "type": "patchouli:text",
       "title": "Create a Keyword",
-      "text": "Definitions > Keywords opens a visual script with two action lanes: Periodic actions and Threshold actions. Settings includes name, max_stacks, duration, tick_interval, threshold, and consume_stacks. A keyword is custom state, not a registered potion effect."
+      "text": "Definitions > Keywords opens four action lanes: Tick, Threshold, Stacks lost, and All stacks lost. Click the lane selector to switch. Stack settings includes duration, decay delay, decay interval, decay stacks, and threshold controls. Keywords are custom state, separate from potion effects."
     },
     {
       "type": "patchouli:text",
@@ -23,12 +23,27 @@
     {
       "type": "patchouli:text",
       "title": "Stacks and Duration",
-      "text": "max_stacks caps accumulation. duration is a single lifetime refreshed by new application. The system bounds duration and interval to 72,000 ticks, and stacks to 1,024. Resetting a field uses its documented runtime default."
+      "text": "Duration is refreshed on application; zero disables expiry. Decay stacks defaults to zero (off). Set a positive amount, then set Decay delay and Decay interval in ticks. Twenty ticks is one second. Reapplication resets the delay, including at the stack cap."
     },
     {
       "type": "patchouli:text",
       "title": "Reusable Templates",
       "text": "mastery:scorch and mastery:thunder provide bundled examples, with matching mastery:scorch_on_hit and mastery:thunder_on_hit scripts. They remain inactive until a skill links a trigger. Copy their ideas into your own IDs for independent tuning."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Stack Loss Events",
+      "text": "Stacks lost actions run after decay, expiry, explicit removal, or threshold consumption. All stacks lost actions also run when the keyword empties. Per stack scales by the number actually removed. The original owner and target remain available. Logout, entity removal, reload, and shutdown clear state without callbacks."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Keyword Bonuses",
+      "text": "Add a mastery:keyword_modifier effect to a passive, spell modifier, or tree modifier. Choose Keyword, then flat or Percent values for Stacks, Damage, and Duration. Percent uses fractions: 0.25 is +25%. Flat duration uses ticks. Bonuses scale by rank: (base + flat) times (1 + percent)."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Fractional Stacks",
+      "text": "A result of 1.25 applied stacks gives one guaranteed stack and a 25% chance of another. Max stacks still caps the result. Damage bonuses affect keyword damage and lightning actions before Per rank or Per stack. Duration and stacks update on application; damage bonuses use current active skills."
     }
   ]
 }

@@ -4,12 +4,16 @@ Mastery targets Minecraft 1.21.1 and NeoForge under `com.cappleapple.mastery`. I
 
 ## Authority and data flow
 
-The server owns XP, levels, points, purchased ranks, book tokens, spell assignments, enabled modifiers, and world-tier restrictions. Clients send intent; they cannot submit progression balances. The client owns its personal map layout.
+The server owns XP, levels, points, purchased ranks, book tokens, spell assignments, enabled modifiers, selected classes and pending starter rewards, and world-tier restrictions. Clients send intent; they cannot submit progression balances. The client owns its personal map layout.
 
 ```mermaid
 flowchart LR
     Damage[Accepted damage] --> School[Iron school damage type]
-    School --> XP[Specialization XP and points]
+    School --> Gain[Earned XP modifiers]
+    Gain --> XP[Specialization XP and points]
+    Classes[Class selection] --> XP
+    Classes --> Nodes
+    Classes --> Attributes
     XP --> Nodes[Purchased upgrades]
     Book[Consumed skill book] --> Nodes
     Nodes --> Attributes[Existing attributes]
@@ -18,9 +22,17 @@ flowchart LR
     Slots --> Cast[Iron native casting]
 ```
 
-`MasteryEvents` emits usage contexts after actual damage is applied. `SchoolDamage` compares the source against Iron's registered school damage types. Matching rules in `xp_sources` award XP to independent trees. Level transitions award points according to each tree's rules; the defaults grant one per level.
+`MasteryEvents` emits usage contexts after actual damage is applied. `SchoolDamage` compares the source against Iron's registered school damage types. Matching rules in `xp_sources` award XP to independent trees. `ExperienceModifiers` composes global and tree-specific attributes with active rank-scaled XP effects before the pure progression service runs. Administrative exact-XP changes and direct point grants skip that scaling. Promoted root gates apply before a source consumes its once-only reward. Level transitions award points according to each tree's rules; the defaults grant one per level.
 
 Definitions load as immutable snapshots. Resources under `masteryedits` override matching `mastery` resources. `MasteryReloadListener.reloadOnly` also reads fresh files from the world's editor datapack, so `/mastery reload` and editor saves do not invoke Minecraft's full datapack reload. The loader checks schema, references, cycles, and runtime registry IDs before replacing a graph. Failed reloads retain the previous accepted snapshot. Player attachments persist progression and assignments; native mana and cooldowns are not copied into a second saved system.
+
+## Classes and generated trees
+
+`ClassService` begins join selection only when the server config enables it, class definitions exist, and the player has not selected a class. The saved selection state includes the player's original game mode and location. A server-validated choice applies the starting package once and restores that state. `PlayerProgress` format 4 stores the class ID, reward ledger, pending inventory deliveries, and any unfinished selection alongside progression. Attribute grants rebuild from the accepted class definition; they are not duplicated on login. See [classes](classes.md) for reset and reload behavior.
+
+`PromotedTrees.expand` materializes a node's `root_tree` into a separate tree before point budgets and graph validation. It keeps the root's purchase identity and resolves descendant ownership in dependency order. The generated tree earns XP only while its purchased root and retained prerequisite gates are eligible. `CostResolver` excludes locked currencies from purchase plans, including costs paid from another owning tree. Generated tree IDs are stable proficiency keys; node IDs remain stable rank keys.
+
+Definition synchronization retains the authored `root_tree` object and original descendant owners rather than serializing duplicate generated tree files. The client expands the same model. Generated layout anchors share the promoted node's position, while only the node icon is rendered; its outline reads the generated tree's XP. Layout refreshes when a prerequisite level or world tier changes. See [promoted roots](roots.md) for the data contract.
 
 ## Spells and equipment
 

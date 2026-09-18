@@ -1,0 +1,33 @@
+{
+  "name": "Choose Your Class",
+  "category": "mastery:progression",
+  "icon": "minecraft:player_head",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Choose on Joining",
+      "text": "When the server enables classes, your first join opens a class selector. Choose a class to inspect its starting points, skills, items, and attributes, then confirm. You wait in spectator mode at your starting position until your choice is accepted."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Keep What You Have",
+      "text": "Starter points and skill ranks add to existing progression. Starter armor equips automatically; displaced gear moves to inventory. Extra supplies enter inventory or wait in a saved overflow queue until you make room."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "One Starting Package",
+      "text": "Starting rewards are granted once. Death, reconnecting, and a server restart preserve your class without repeating its items. Ordinary progression resets keep the class choice and pending supplies; they can remove its originally granted points and skills."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Return to Play",
+      "text": "After choosing, the server restores your previous game mode. Disconnecting during selection does not lose that mode. Operators can disable mandatory selection with classSelectorEnabled; this releases waiting players and preserves already chosen classes."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Class Preview",
+      "text": "Choose a class icon from the top strip. Scroll it for more classes. The center preview wears starter armor; hover a body part for its item tooltip. Starting skills appear left, inventory right, and attributes below. Previous and Next cycle classes; Choose confirms."
+    }
+  ]
+}

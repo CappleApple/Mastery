@@ -10,7 +10,7 @@ Open Mastery with **M**. The same map displays every tree fully expanded, includ
 
 Right-click a tree or node to open its menu. Available actions include editing its definition, adding a child, adding a tree, and deleting the selected definition. Definitions open as visual forms. Search for a setting, open nested groups, choose IDs from searchable lists, and edit numbers, text, booleans, and colors through typed controls. Arrays support adding, removing, and moving entries upward. **Reset** removes an override so it inherits or uses its default. **Add field** supports extension fields and named milestone levels; value-type controls can create nested objects and lists.
 
-The **Definitions** browser exposes trees, nodes, spell bindings, global settings, XP sources, reusable requirements/effects, combat contexts, and legacy groups. New spell bindings choose an existing Iron registry spell; they do not register spells. Global settings use the fixed ID `mastery:defaults`.
+The **Definitions** browser exposes classes, trees, nodes, spell bindings, global settings, XP sources, reusable requirements/effects, combat contexts, and legacy groups. New spell bindings choose an existing Iron registry spell; they do not register spells. Global settings use the fixed ID `mastery:defaults`.
 
 The **JSON editor** uses colored keys, strings, numbers, literals, and brackets, with native text selection, clipboard shortcuts, and a **Format JSON** button. Switching between JSON and visual forms preserves the current draft. **Save to world** or **Ctrl+S** validates and submits the entire definition; nested **Done** buttons only return to the enclosing form. Rejected saves retain the draft. See the actual schemas in [datapacks](datapacks.md).
 
@@ -112,7 +112,7 @@ Needs Not Necessities is optional. When installed, Mastery can supply placed-blo
 
 ## In-game reference
 
-With Patchouli installed, the **Operator Workshop** category appears in the Mastery Field Guide while the server has enabled your edit mode. It covers the editor map, prerequisites, inherited settings, elemental damage, script events, health checks, action targeting, stacking keywords, scorch/thunder examples, crafting, placement, validation, and export. Turn edit mode off to hide the category. No external wiki is needed for these workflows.
+With Patchouli installed, the **Operator Workshop** category appears in the Mastery Field Guide while the server has enabled your edit mode. It covers the editor map, classes and native starting items, XP modifiers, promoted roots, prerequisites, inherited settings, elemental damage, script events, health checks, action targeting, stacking keywords, scorch/thunder examples, crafting, placement, validation, and export. Turn edit mode off to hide the category. No external wiki is needed for these workflows.
 
 
 ### Several spell rewards on one skill
@@ -124,11 +124,11 @@ Add `mastery:spell_modifier` effects to an enabled ordinary skill to change its 
 
 ## Icon resources and XP outlines
 
-Open a tree or node's **Icon** field and choose **Choose...**. The icon browser previews PNG resources under `textures/` from every loaded namespace, including resource packs. Its type button cycles through **Textures**, **Items**, and native **Spells**; search matches resource IDs and paths. Select an entry, then **Apply** and save the definition.
+Open a class, tree, or node's **Icon** field and choose **Choose...**. The icon browser previews PNG resources under `textures/` from every loaded namespace, including resource packs. Its type button cycles through **Textures**, **Items**, and native **Spells**; search matches resource IDs and paths. Select an entry, then **Apply** and save the definition.
 
 An icon accepts a registered item ID, a loaded PNG resource ID such as `mastery:textures/gui/sprites/graph/rune.png`, or an installed native spell ID. Loaded PNG IDs outside `textures/` can also be entered directly in the Icon field. A raw texture uses the complete image scaled into the icon square. Both the skill map and matching Skill Book covers use the same resolution rules. Resource files must be installed on each client; exporting Mastery definitions does not copy image assets. Reloading resource packs refreshes the available resources.
 
-In player mode, each specialization root shows current-level proficiency XP as a clockwise outline beginning at the top. The outline follows its configured circle, square, diamond, or hexagon, and is full at the current level cap. Its ratio is current XP divided by XP needed for the next level. Editor mode retains the normal presentation border while authoring.
+In player mode, each specialization root shows current-level proficiency XP as a clockwise outline beginning at the top. The outline follows its configured circle, square, diamond, hexagon, pentagon, or triangle, and is full at the current level cap. Its ratio is current XP divided by XP needed for the next level. Editor mode retains the normal presentation border while authoring.
 
 ## Nested purchase costs
 
@@ -138,4 +138,58 @@ A leaf can spend specialization `points`, raw vanilla `experience` points, or in
 
 Use **Use AND** to require all children or **Use OR** to choose an affordable alternative. Open the resulting group, then use **Add entry**, **Add AND**, or **Add OR** to nest additional costs. For example, an AND group can require points from two trees and an OR group containing either vanilla XP or a diamond. List order determines the preferred alternative among affordable complete plans. The server checks a whole payment plan before deducting anything.
 
-**Cost depth percent** adds a fraction per node depth and rounds each leaf cost up: `0.1` means +10% per depth. Nodes without dependencies have depth zero; each dependency link adds one along the longest path. Visual placement does not affect the price. A leaf's **Depth percent** overrides the inherited value for that cost alone. The node's displayed cost and purchase eligibility use the resolved rule. See [purchase costs](costs.md) for the complete schema and payment/refund behavior.
+**Cost depth percent** adds a fraction per node depth and rounds each leaf cost up: `0.1` means +10% per depth. Nodes without dependencies have depth zero; each dependency link adds one along the longest path. Inside a promoted tree, depth counts only links within that currency, so the first descendant starts at zero; the promoted node retains its original parent-tree depth. Visual placement does not affect the price. A leaf's **Depth percent** overrides the inherited value for that cost alone. The node's displayed cost and purchase eligibility use the resolved rule. See [purchase costs](costs.md) for the complete schema and payment/refund behavior.
+
+## Classes
+
+Open **Definitions**, choose **Classes**, and select **New definition**. Set the class's ID, name, description, and icon. The form provides four reward groups:
+
+| Group | Editing workflow |
+| --- | --- |
+| **Starting points** | **Add field** opens a tree picker; edit the resulting value to set its one-time point grant. |
+| **Starting skills** | **Add field** opens a node picker; set each granted rank and include its required prerequisite ranks. |
+| **Starting inventory** | **Add entry** creates an item stack; choose **Id**, set **Count**, and optionally add native **Components**. |
+| **Attributes** | **Add entry** creates a modifier with **Attribute**, **Amount**, and **Operation**. |
+
+The inventory item picker lists registered items. Components use Minecraft's native component structure through the ordinary nested object/list controls; they are not a separate Mastery item format. For example, `minecraft:enchantments` contains a `levels` object whose keys are enchantment IDs and values are integer levels. [Classes](classes.md#starting-item-components) includes a complete named, enchanted starting-item example.
+
+Saving validates tree and skill references, prerequisite ranks, exclusions, item components, and attribute IDs. Starter rewards apply once when a player chooses the class. Existing inventory is preserved, and supplies that do not fit remain saved until space opens. Editing class attributes updates existing members after reload; editing starter rewards affects future choices. The server config `classSelectorEnabled` controls the mandatory join selector and defaults to true.
+
+## Overall and per-tree XP bonuses
+
+For every-tree XP, add a `mastery:attribute` effect targeting `mastery:experience_gain`. For a bundled tree, use its corresponding attribute, such as `mastery:fire_experience_gain`. These multipliers start at 1; an **Amount** of `0.2` with **Operation** `add_value` adds 20 percentage points per active rank. Classes can use these attributes in their **Attributes** list.
+
+For any data-defined tree, choose `mastery:experience_gain` as the effect **Type**, choose **Tree**, and set **Amount**. An amount of `0.25` adds 25% per active rank. Reset **Tree** or leave it blank for a bonus to every tree. This effect supports newly added trees without registering new Minecraft attributes.
+
+Tree definitions and a node's **Root tree** group expose **Xp attribute**. Choose an already registered multiplier attribute to use for that tree. Empty uses its bundled attribute when available, or a neutral multiplier otherwise. Overall attributes, the chosen tree attribute, and matching XP effects multiply together. These bonuses affect earned proficiency XP, not direct points, vanilla XP, or purchase costs. See [XP modifiers](experience.md) for the formula and exact award paths.
+
+## Turn a node into a tree root
+
+Edit a node or synergy and add **Root tree**. Keep **Enabled** true and set **Id** to the new currency's tree ID. An empty ID uses the node ID followed by `_tree`. Set its XP curve, point schedule, growth section, optional tier caps, and XP attribute in the same group.
+
+The original node keeps its ID, costs, prerequisites, rank, requirements, and book gate. Its ranks still use its parent tree's normal purchase rules. Its descendants in the same authored tree move to the new currency, and nested promoted nodes can open further currencies. When dependencies cross several promoted branches, set the child's **Tree** explicitly to the intended generated tree ID; ambiguous ownership rejects the save.
+
+Save the root, then create or edit an **XP sources** definition and choose the generated tree. Set its event, amount, scale, and conditions independently. Existing parent-tree XP is not copied. Until the root is purchased and its prerequisites remain satisfied, its new tree cannot earn XP or buy descendants.
+
+The bundled Flame Blade demonstrates this using the existing `mastery:spellblade_practice` node and generated `mastery:flame_blade` tree. Its displayed name changes without discarding saved purchases. Continue editing the generated tree through the node's **Root tree** group; exports keep this authored definition instead of producing a duplicate tree file. See [promoted roots](roots.md) for ownership, migration, and data examples.
+
+Damage conditions in the trigger editor filter melee, ranged, magic, physical, elemental, specific types, or native damage tags. See [damage filters](mechanics.md#damage-filters).
+
+Tree roots show their available points above the icon. Hover tooltips show the next-rank cost when rank limits and progression gates permit upgrading. The details panel omits the all-tree balance list and repeated control instructions.
+
+Opening or returning to the map restores the saved layout immediately. Expanding and collapsing branches still animate. The default `unlock.hold_delay_ms` is 100; explicit overrides retain their configured delay.
+
+Edit **Connections** on a node, tree, spell binding, or global settings to set **Parent line style** and **Child line style** independently. Choose **Dashed**, **Solid**, or **Default** to inherit. Incoming cross-tree prerequisites use the destination's parent style; outgoing branch connections use the source's child style. Promoted roots keep dashed prerequisite lines and solid child lines by default.
+
+For a spell-bound combat trigger, edit the node: set **Type** to **Modifier**, select its **Spell**, add the active skill under **Dependencies**, and add a `mastery:trigger` effect under **Effects**. The default handler is `mastery:native_spell`. The modifier consumes a slot and only handles damage from the assigned spell. Use **Passive** for a general combat trigger.
+
+Keyword **Settings** includes an optional `description` field. The keyword name is matched in rendered screen text and tooltips. Hover explanations also derive the stack cap, lifetime, periodic effects, and threshold effects from the script.
+
+
+### Tree modifier scope and keyword decay
+
+Choose **Modifier** as a node's type, then set **Modifier** to `mastery:tree`. It activates without a spell slot. Set the owning tree's **Damage filter**, or override it on the node; the Fire preset already restricts its tree modifiers to Fire damage. **Inherit subtrees** defaults to enabled. Promoted roots inherit from their owner and prerequisite trees, so Fire modifiers reach Flame Blade.
+
+Add a `mastery:keyword_modifier` effect and select **Keyword**. **Stacks**, **Damage**, and **Duration** add flat bonuses per rank; the corresponding **Percent** fields use fractions. Duration is measured in ticks. The keyword script's lane selector cycles through periodic, threshold, stacks-lost, and all-stacks-lost actions. **Stack settings** exposes duration, decay delay, decay interval, and decay stacks. See [combat mechanics](mechanics.md#keyword-bonuses) for formulas and timing.
+
+**Skill damage xp** controls automatic XP from damage dealt by that tree's unlocked skills. It defaults to one XP per damage, ignores ordinary damage-type restrictions, and avoids duplicate same-tree damage-source awards. Zero disables this route.

@@ -7,6 +7,14 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GraphPresentationTest {
+    @Test void outgoingEdgesSurviveCollapseOnlyUntilEndpointsFinish() {
+        var edge=new GraphLayout.Edge("root","child",false);var shortcut=new GraphLayout.Edge("root","bridge",true);
+        assertEquals(List.of(edge),GraphPresentation.transitionEdges(List.of(edge),List.of(),Set.of("root"),Set.of("root","child")));
+        assertEquals(List.of(),GraphPresentation.transitionEdges(List.of(edge),List.of(),Set.of("root"),Set.of("root")));
+        assertEquals(List.of(edge),GraphPresentation.transitionEdges(List.of(edge),List.of(edge),Set.of("root","child"),Set.of("root","child")));
+        assertEquals(List.of(edge),GraphPresentation.transitionEdges(List.of(shortcut),List.of(edge),Set.of("root","child","bridge"),Set.of("root","child","bridge")));
+    }
+
     @Test void collapsedSynergyEdgesUseNearestVisibleAncestorsRecursively() {
         var entries=new java.util.HashMap<String,GraphLayout.Entry>();
         for(String tree:java.util.List.of("fire","sword"))entries.put(tree,new GraphLayout.Entry(tree,"",tree,GraphLayout.Kind.TREE,java.util.List.of(),java.util.Set.of(),0,0));

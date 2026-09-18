@@ -17,7 +17,7 @@ import java.util.Map;
 /** Strict JSON boundary shared by resource reloads and the one-time definition sync. */
 public final class DefinitionLoader {
     public static final List<String> KINDS = List.of("groups", "trees", "nodes", "spells", "contexts",
-            "xp_sources", "synergies", "requirements", "effects", "settings", "elements", "triggers", "keywords", "mob_types", "weapon_types");
+            "xp_sources", "synergies", "requirements", "effects", "settings", "elements", "triggers", "keywords", "mob_types", "weapon_types", "classes");
     private static final Gson GSON = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
     private DefinitionLoader() {}
@@ -38,6 +38,7 @@ public final class DefinitionLoader {
         Map<String, JsonObject> requirements = new LinkedHashMap<>();
         Map<String, JsonObject> effects = new LinkedHashMap<>();
         Map<String, JsonObject> elements = new LinkedHashMap<>(), triggers = new LinkedHashMap<>(), keywords = new LinkedHashMap<>(), mobTypes = new LinkedHashMap<>(), weaponTypes = new LinkedHashMap<>();
+        Map<String, JsonObject> classes = new LinkedHashMap<>();
         List<String> errors = new ArrayList<>();
         Map<String,JsonObject> overrides = new LinkedHashMap<>();
         UnlockPresentation[] defaults = {UnlockPresentation.DEFAULTS};
@@ -65,18 +66,20 @@ public final class DefinitionLoader {
                     case "keywords" -> keywords.put(id, (JsonObject) definition);
                     case "mob_types" -> mobTypes.put(id, (JsonObject) definition);
                     case "weapon_types" -> weaponTypes.put(id, (JsonObject) definition);
+                    case "classes" -> classes.put(id, (JsonObject) definition);
                     default -> throw new JsonParseException("unknown definition directory " + kind);
                 }
             } catch (RuntimeException ex) {
                 errors.add(kind + "/" + id + ": " + ex.getMessage());
             }
         }));
+        PromotedTrees.expand(trees,nodes,overrides,errors);
         DefinitionSet budgetDefinitions=new DefinitionSet(groups,trees,nodes,spells,contexts,xp,requirements,effects,defaults[0],overrides);
         trees.replaceAll((id,tree)->{
             try{return tree.withMaxLevel(com.cappleapple.mastery.progression.TreeLevelBudget.maximum(tree,budgetDefinitions));}
             catch(RuntimeException error){errors.add("trees/"+id+": "+error.getMessage());return tree.withMaxLevel(0);}
         });
-        DefinitionSet result = new DefinitionSet(groups, trees, nodes, spells, contexts, xp, requirements, effects, defaults[0],overrides,elements,triggers,keywords,mobTypes,weaponTypes);
+        DefinitionSet result = new DefinitionSet(groups, trees, nodes, spells, contexts, xp, requirements, effects, defaults[0],overrides,elements,triggers,keywords,mobTypes,weaponTypes,classes);
         errors.addAll(GraphValidator.validate(result).errors());
         try {SettingsResolver.validate(SettingsResolver.resolved(result,"","",""),"");}catch(RuntimeException ex){errors.add("settings/mastery:defaults: "+ex.getMessage());}
         trees.keySet().forEach(id->{try{SettingsResolver.validate(SettingsResolver.forNode(result,id),"");}catch(RuntimeException ex){errors.add("trees/"+id+": "+ex.getMessage());}});
@@ -108,7 +111,7 @@ public final class DefinitionLoader {
             case "xp_sources" -> new XpSourceDefinition(id, requiredString(json, "tree"), requiredString(json, "event"),
                     number(json, "amount", 1), string(json, "scale", "none"), object(json, "condition", new JsonObject()),
                     integer(json, "points", 0), bool(json, "once", false));
-            case "requirements", "effects", "elements", "triggers", "keywords", "mob_types", "weapon_types" -> json.deepCopy();
+            case "requirements", "effects", "elements", "triggers", "keywords", "mob_types", "weapon_types", "classes" -> json.deepCopy();
             default -> throw new JsonParseException("unknown definition directory " + kind);
         };
     }
@@ -136,7 +139,7 @@ public final class DefinitionLoader {
         return new TreeDefinition(id, string(json, "name", id), string(json, "description", ""),
                 string(json, "icon", "minecraft:book"), string(json, "parent", ""), integer(json, "max_level", 0),
                 number(json, "xp_base", 100), number(json, "xp_growth", 20), integer(json, "point_every", 1),
-                milestones, string(json, "point_formula", ""), caps, string(json, "section", "south"), TreeTheme.parse(SettingsResolver.merge(TreeTheme.DEFAULT.toJson(),object(json, "theme", new JsonObject()))), UnlockPresentation.parse(object(json,"unlock",new JsonObject())),integer(json,"points_per_award",1));
+                milestones, string(json, "point_formula", ""), caps, string(json, "section", "south"), TreeTheme.parse(SettingsResolver.merge(TreeTheme.DEFAULT.toJson(),object(json, "theme", new JsonObject()))), UnlockPresentation.parse(object(json,"unlock",new JsonObject())),integer(json,"points_per_award",1),string(json,"xp_attribute",""));
     }
 
     private static Dependency dependency(JsonElement value,int depth) {
@@ -165,7 +168,7 @@ public final class DefinitionLoader {
                 integer(json, "max_rank", 1), integer(json, "cost", 1), integer(json, "level", 0),
                 integer(json, "world_tier", 0), objects(json, "requirements"), objects(json, "effects"),
                 string(json, "visibility", "available"), strings(json, "exclusions"), bool(json, "toggleable", false),
-                string(json, "spell", ""), string(json, "modifier", ""), string(json, "book_token", ""));
+                string(json, "spell", ""), string(json, "modifier", ""), string(json, "book_token", ""),PromotedTrees.parse(json),requiredString(json,"tree"));
     }
 
     private static SpellDefinition spell(String id, JsonObject json) {
@@ -200,6 +203,7 @@ public final class DefinitionLoader {
         json.add("keywords", GSON.toJsonTree(definitions.keywords()));
         json.add("mob_types", GSON.toJsonTree(definitions.mobTypes()));
         json.add("weapon_types", GSON.toJsonTree(definitions.weaponTypes()));
+        json.add("classes", GSON.toJsonTree(definitions.classes()));
         JsonObject settings=new JsonObject(), defaults=new JsonObject();
         defaults.add("unlock",definitions.unlockDefaults().toJson());settings.add("mastery:defaults",defaults);json.add("settings",settings);
         definitions.settingOverrides().forEach((key,values)->{
@@ -210,6 +214,7 @@ public final class DefinitionLoader {
             }
         });
         json.getAsJsonObject("trees").entrySet().forEach(entry->entry.getValue().getAsJsonObject().remove("max_level"));
+        PromotedTrees.prepareJson(definitions,json);
         return json;
     }
 

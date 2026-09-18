@@ -76,6 +76,7 @@ public final class VisualDefinitionScreen extends Screen {
         if(seed.isJsonObject()&&value.isJsonNull())value=seed.deepCopy();
         if(seed.isJsonObject()&&value.isJsonPrimitive()&&value.getAsString().equals("default"))value=key.equals("costs")?seed.deepCopy():new JsonObject();
         if(key.equals("modifier_slots")&&value.isJsonPrimitive()&&value.getAsJsonPrimitive().isNumber()) {var slots=new JsonObject();slots.add("base",value);value=slots;}
+        if(key.equals("root_tree")&&value.isJsonPrimitive()&&value.getAsJsonPrimitive().isBoolean()){var root=new JsonObject();root.addProperty("enabled",value.getAsBoolean());value=root;}
         if(container.isJsonArray()&&value.isJsonPrimitive()&&value.getAsJsonPrimitive().isString()) {
             if(path.contains("dependencies")){var dependency=new JsonObject();dependency.addProperty("node",value.getAsString());dependency.addProperty("rank",1);value=dependency;}
             else if(path.endsWith("/requirements")||path.endsWith("/effects")){var reference=new JsonObject();reference.addProperty("ref",value.getAsString());value=reference;}
@@ -98,6 +99,10 @@ public final class VisualDefinitionScreen extends Screen {
     }
     private void add(){
         if(container.isJsonArray()){container.getAsJsonArray().add(EditorSchema.entry(path));page=Math.max(0,(container.getAsJsonArray().size()-1)/rowCount);refresh();}
+        else if(path.endsWith("starting_points")||path.endsWith("starting_skills")) {
+            var choices=path.endsWith("starting_points")?com.cappleapple.mastery.client.ClientState.definitions().trees().keySet():com.cappleapple.mastery.client.ClientState.definitions().nodes().keySet();
+            minecraft.setScreen(new EditorChoiceScreen(this,path.endsWith("starting_points")?"Specialization":"Starting skill",choices.stream().filter(id->!container.getAsJsonObject().has(id)).sorted().toList(),id->{container.getAsJsonObject().addProperty(id,1);filter=id;page=0;}));
+        }
         else if(path.endsWith("damage_modifiers")) {
             var groups=com.cappleapple.mastery.client.ClientState.definitions().toJson().getAsJsonObject("mob_types");
             minecraft.setScreen(new EditorChoiceScreen(this,"Mob group",groups.keySet().stream().filter(id->!container.getAsJsonObject().has(id)).sorted().toList(),id->{container.getAsJsonObject().addProperty(id,0);filter=id;page=0;}));

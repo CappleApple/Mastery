@@ -50,7 +50,8 @@ public final class MechanicsRuntime {
         final LivingEntity target;
         ServerPlayer owner;
         int stacks, rank;
-        long expires, nextTick;
+        long expires, nextTick, nextDecay;
+        DamageContext source=DamageContext.EMPTY;
         KeywordState(ServerPlayer owner, LivingEntity target, int rank, long nextTick) {
             this.owner = owner; this.target = target; this.rank = rank; this.nextTick = nextTick;
         }
@@ -61,23 +62,31 @@ public final class MechanicsRuntime {
         final LivingEntity target;
         final String event;
         final float damage;
+        final DamageContext damageContext;
+        final Set<String> spellModifiers;
         double selfHealth, targetHealth;
         final double selfMaximum, targetMaximum;
-        Pending(ServerPlayer owner, LivingEntity target, String event, float damage) {
-            this.owner = owner; this.target = target; this.event = event; this.damage = damage;
+        Pending(ServerPlayer owner, LivingEntity target, String event, float damage, DamageContext damageContext) {
+            this.owner = owner; this.target = target; this.event = event; this.damage = damage; this.damageContext=damageContext;
+            spellModifiers=owner.getUUID().equals(damageContext.caster())
+                    ?com.cappleapple.mastery.spells.SpellService.activeModifiers(owner,damageContext.spell()):Set.of();
             selfHealth = owner.getHealth(); selfMaximum = owner.getMaxHealth();
             targetHealth = target == null ? 0 : target.getHealth(); targetMaximum = target == null ? 0 : target.getMaxHealth();
         }
     }
 
     private record Context(ServerPlayer owner, LivingEntity target, int rank, int stacks, float damage,
-            double selfHealth, double selfMaximum, double targetHealth, double targetMaximum) {
+            double selfHealth, double selfMaximum, double targetHealth, double targetMaximum, DamageContext damageContext,String keyword) {
+        Context(ServerPlayer owner,LivingEntity target,int rank,int stacks,float damage,double selfHealth,double selfMaximum,double targetHealth,double targetMaximum,DamageContext source) {
+            this(owner,target,rank,stacks,damage,selfHealth,selfMaximum,targetHealth,targetMaximum,source,"");
+        }
+        Context keyword(String id,DamageContext source){return new Context(owner,target,rank,stacks,damage,selfHealth,selfMaximum,targetHealth,targetMaximum,source,id);}
         static Context current(ServerPlayer owner, LivingEntity target, int rank, int stacks) {
             return new Context(owner, target, rank, stacks, 0, owner.getHealth(), owner.getMaxHealth(),
-                    target == null ? 0 : target.getHealth(), target == null ? 0 : target.getMaxHealth());
+                    target == null ? 0 : target.getHealth(), target == null ? 0 : target.getMaxHealth(),DamageContext.EMPTY);
         }
         Context withTarget(LivingEntity selected) { return new Context(owner, selected, rank, stacks, damage,
-                selfHealth, selfMaximum, selected == null ? 0 : selected.getHealth(), selected == null ? 0 : selected.getMaxHealth()); }
+                selfHealth, selfMaximum, selected == null ? 0 : selected.getHealth(), selected == null ? 0 : selected.getMaxHealth(),damageContext,keyword); }
     }
 
     public static void initialize() {
@@ -95,7 +104,7 @@ public final class MechanicsRuntime {
         try { tick.run(); } finally { if (secondary) depth--; }
     }
 
-    private static boolean secondary(DamageSource source) {
+    public static boolean secondary(DamageSource source) {
         return processing() || source.getDirectEntity() != null && source.getDirectEntity().getPersistentData().getBoolean(PROC)
                 || source.getEntity() != null && source.getEntity().getPersistentData().getBoolean(PROC);
     }
@@ -105,24 +114,24 @@ public final class MechanicsRuntime {
         if (event.getNewDamage() <= 0 || event.getEntity().level().isClientSide || secondary(event.getSource()) || ElementalDamage.isWeaponBonus(event.getSource()) || ElementalDamage.partitioning(event.getEntity())) return;
         var target = event.getEntity();
         if (event.getSource().getEntity() instanceof ServerPlayer owner && owner != target)
-            queue(new Pending(owner, target, "hit", event.getNewDamage()));
+            queue(new Pending(owner, target, "hit", event.getNewDamage(),DamageContexts.capture(event.getSource())));
         if (target instanceof ServerPlayer owner)
-            queue(new Pending(owner, event.getSource().getEntity() instanceof LivingEntity attacker ? attacker : null, "hurt", event.getNewDamage()));
+            queue(new Pending(owner, event.getSource().getEntity() instanceof LivingEntity attacker ? attacker : null, "hurt", event.getNewDamage(),DamageContexts.capture(event.getSource())));
     }
 
     /** One successful-hit event for all damage portions, including complete absorption of the primary portion. */
-    public static void weaponHitFinished(LivingEntity target, DamageSource source, float applied) {
+    public static void weaponHitFinished(LivingEntity target, DamageSource source, float applied, DamageContext damageContext) {
         if (applied <= 0 || secondary(source)) return;
-        if (source.getEntity() instanceof ServerPlayer owner && owner != target) queue(new Pending(owner, target, "hit", applied));
-        if (target instanceof ServerPlayer owner) queue(new Pending(owner, source.getEntity() instanceof LivingEntity attacker ? attacker : null, "hurt", applied));
+        if (source.getEntity() instanceof ServerPlayer owner && owner != target) queue(new Pending(owner, target, "hit", applied,damageContext));
+        if (target instanceof ServerPlayer owner) queue(new Pending(owner, source.getEntity() instanceof LivingEntity attacker ? attacker : null, "hurt", applied,damageContext));
     }
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void died(LivingDeathEvent event) {
         if (event.isCanceled() || event.getEntity().level().isClientSide) return;
         var victim = event.getEntity();
-        if (event.getSource().getEntity() instanceof ServerPlayer owner && owner != victim) queue(new Pending(owner, victim, "kill", 0));
+        if (event.getSource().getEntity() instanceof ServerPlayer owner && owner != victim) queue(new Pending(owner, victim, "kill", 0,DamageContexts.capture(event.getSource())));
         if (victim instanceof ServerPlayer owner)
-            queue(new Pending(owner, event.getSource().getEntity() instanceof LivingEntity attacker ? attacker : null, "death", 0));
+            queue(new Pending(owner, event.getSource().getEntity() instanceof LivingEntity attacker ? attacker : null, "death", 0,DamageContexts.capture(event.getSource())));
     }
 
     private static void queue(Pending event) { if (PENDING.size() < MAX_EVENTS) PENDING.add(event); }
@@ -191,11 +200,17 @@ public final class MechanicsRuntime {
             if (current == null || current.get(id) != state) continue;
             long now = state.target.level().getGameTime();
             var definition = MasteryRuntime.definitions().keywords().get(id);
-            if (definition == null || state.expires <= now || !state.target.isAlive() || state.target.isRemoved()
+            if (definition == null || !state.target.isAlive() || state.target.isRemoved()
                     || state.owner.isRemoved() || state.owner.level() != state.target.level()) { current.remove(id); continue; }
+            if(state.expires<=now){removeKeyword(state.target,id,0);continue;}
+            if(number(definition,"decay_stacks",0)>0&&now>=state.nextDecay) {
+                state.nextDecay=now+(int)number(definition,"decay_interval",20);
+                removeKeyword(state.target,id,(int)number(definition,"decay_stacks",1));
+                if(current.get(id)!=state)continue;
+            }
             if (now >= state.nextTick) {
                 state.nextTick = now + (int)number(definition, "tick_interval", 20);
-                runGuarded(() -> execute(definition, "tick_actions", Context.current(state.owner, state.target, state.rank, state.stacks)));
+                runGuarded(() -> execute(definition, "tick_actions", Context.current(state.owner, state.target, state.rank, state.stacks).keyword(id,state.source)));
             }
         }
         KEYWORDS.values().removeIf(Map::isEmpty);
@@ -204,6 +219,8 @@ public final class MechanicsRuntime {
     private static void fire(Pending event) {
         Map<String, Integer> granted = new TreeMap<>();
         for (var node : MasteryRuntime.definitions().nodes().values()) {
+            if(node.spellModifier()&&!event.spellModifiers.contains(node.id()))continue;
+            if(!TreeModifiers.matches(node,event.damageContext))continue;
             int rank = EffectService.effectiveRank(event.owner, node);
             if (rank <= 0) continue;
             for (var raw : node.effects()) {
@@ -215,7 +232,7 @@ public final class MechanicsRuntime {
             var definition = MasteryRuntime.definitions().triggers().get(entry.getKey());
             if (definition == null || !text(definition, "event", "").equals(event.event)) continue;
             var context = new Context(event.owner, event.target, entry.getValue(), 1, event.damage,
-                    event.selfHealth, event.selfMaximum, event.targetHealth, event.targetMaximum);
+                    event.selfHealth, event.selfMaximum, event.targetHealth, event.targetMaximum,event.damageContext);
             if (!conditions(definition, context)) continue;
             long now = event.owner.level().getGameTime();
             var cooldowns = COOLDOWNS.computeIfAbsent(event.owner.getUUID(), ignored -> new HashMap<>());
@@ -240,6 +257,10 @@ public final class MechanicsRuntime {
         if (!value.has("conditions")) return true;
         for (var raw : value.getAsJsonArray("conditions")) {
             var condition = raw.getAsJsonObject();
+            if(text(condition,"type","").equals("damage")) {
+                if(!context.damageContext.matches(condition))return false;
+                continue;
+            }
             boolean self = text(condition, "target", "target").equals("self");
             var selected = self ? context.owner : context.target;
             if (selected == null) return false;
@@ -267,6 +288,11 @@ public final class MechanicsRuntime {
         var definition = MasteryRuntime.definitions().keywords().get(id);
         if (definition == null || context.target == null || !context.target.isAlive() || context.owner.level() != context.target.level() || amount <= 0) return;
         if (!KEYWORDS.containsKey(context.target.getUUID()) && KEYWORDS.size() >= 4096) return;
+        double adjusted=KeywordModifiers.adjust(context.owner,id,"stacks",amount,context.damageContext);
+        amount=(int)Math.floor(adjusted)+(context.owner.getRandom().nextDouble()<adjusted-Math.floor(adjusted)?1:0);
+        if(amount<=0)return;
+        var existing=KEYWORDS.getOrDefault(context.target.getUUID(),Map.of()).get(id);
+        if(existing!=null&&existing.expires<=context.target.level().getGameTime())removeKeyword(context.target,id,0);
         var map = KEYWORDS.computeIfAbsent(context.target.getUUID(), ignored -> new HashMap<>());
         if (!map.containsKey(id) && map.size() >= 64) return;
         long now = context.target.level().getGameTime();
@@ -274,17 +300,18 @@ public final class MechanicsRuntime {
         if (state.expires <= now) { state.stacks = 0; state.nextTick = now + (int)number(definition, "tick_interval", 20); }
         int previous = state.stacks;
         state.stacks = MechanicsRules.stacks(previous, amount, (int)number(definition, "max_stacks", 1));
-        state.owner = context.owner; state.rank = context.rank;
-        state.expires = now + (duration > 0 ? duration : (int)number(definition, "duration", 100));
+        state.owner = context.owner; state.rank = context.rank;state.source=context.damageContext;
+        int baseDuration=duration>0?duration:(int)number(definition,"duration",100);
+        state.expires=baseDuration==0?Long.MAX_VALUE:now+Math.clamp((int)Math.ceil(KeywordModifiers.adjust(context.owner,id,"duration",baseDuration,context.damageContext)),1,72000);
+        state.nextDecay=now+Math.max(1,(int)number(definition,"decay_delay",0));
         int threshold = (int)number(definition, "threshold", 0);
         if (crossed(previous, state.stacks, threshold)) {
             int triggeringStacks = state.stacks;
             // Consume before executing actions so cross-keyword interactions are deterministic and recursion-safe.
             if (bool(definition, "consume_stacks", true)) {
-                state.stacks -= threshold;
-                if (state.stacks == 0) map.remove(id);
+                removeKeyword(context.target,id,threshold);
             }
-            runGuarded(() -> execute(definition, "threshold_actions", Context.current(context.owner, context.target, context.rank, triggeringStacks)));
+            runGuarded(() -> execute(definition, "threshold_actions", Context.current(context.owner, context.target, context.rank, triggeringStacks).keyword(id,context.damageContext)));
         }
     }
 
@@ -293,7 +320,14 @@ public final class MechanicsRuntime {
         if (values == null) return;
         var state = values.get(id);
         if (state == null) return;
-        if (count == 0 || count >= state.stacks) values.remove(id); else state.stacks -= count;
+        int lost=count==0?state.stacks:Math.min(count,state.stacks);if(lost<=0)return;
+        state.stacks-=lost;boolean empty=state.stacks==0;if(empty)values.remove(id);
+        var definition=MasteryRuntime.definitions().keywords().get(id);
+        if(definition!=null) {
+            var context=Context.current(state.owner,target,state.rank,lost).keyword(id,state.source);
+            runGuarded(()->execute(definition,"stacks_lost_actions",context));
+            if(empty)runGuarded(()->execute(definition,"all_stacks_lost_actions",context));
+        }
     }
 
     private static void execute(JsonObject definition, String field, Context context) {
@@ -323,7 +357,10 @@ public final class MechanicsRuntime {
     private static void action(JsonObject action, Context context) {
         var target = context.target;
         double scale = (bool(action, "per_rank", false) ? context.rank : 1) * (bool(action, "per_stack", false) ? context.stacks : 1);
-        double amount = Math.min(1000000, (number(action, "amount", 0) + context.damage * number(action, "damage_fraction", 0)) * scale);
+        double baseAmount=number(action,"amount",0)+context.damage*number(action,"damage_fraction",0);
+        if(!context.keyword.isBlank()&&Set.of("damage","lightning").contains(text(action,"type","")))
+            baseAmount=KeywordModifiers.adjust(context.owner,context.keyword,"damage",baseAmount,context.damageContext);
+        double amount=Math.min(1000000,baseAmount*scale);
         switch (text(action, "type", "")) {
             case "keyword" -> applyKeyword(context, text(action, "keyword", ""), (int)Math.min(1024, number(action, "stacks", 1) * scale), (int)number(action, "duration", 0));
             case "remove_keyword" -> removeKeyword(target, text(action, "keyword", ""), (int)number(action, "stacks", 0));

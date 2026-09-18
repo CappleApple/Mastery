@@ -17,7 +17,12 @@
     {
       "type": "patchouli:text",
       "title": "Charging Spells",
-      "text": "The charge bar fills as a percentage, with marks at each charge level. Select an active node to read its spell description."
+      "text": "The charge bar fills as a percentage, with marks at each charge level. Held stages add native levels above your modified base by default. Thick yellow marks show where a stronger cast uses another Tempo charge. A cast stays within your available charges."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Additional Charges",
+      "text": "With Tempo Not Time installed, spell modifiers can grant extra casts before recharging. Enabled ranks add their charge bonuses; disabling a modifier removes its bonus without clearing existing recharge timers. These bonuses do not change spell level or hold-to-charge strength. The Charges stat shows the current maximum, including your bonuses."
     }
   ]
 }

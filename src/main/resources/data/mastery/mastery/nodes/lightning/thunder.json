@@ -1,14 +1,14 @@
 {
   "tree": "mastery:lightning",
   "name": "Gathering Thunder",
-  "description": "Hits can gather Thunder on you. Full stacks discharge at nearby enemies.",
+  "description": "Lightning Bolt hits build Thunder. Full stacks strike nearby enemies.",
   "icon": "minecraft:book",
-  "type": "passive",
+  "type": "modifier",
   "cost": 1,
   "max_rank": 1,
   "level": 0,
   "dependencies": [
-    "mastery:lightning/foundation"
+    "mastery:lightning_bolt"
   ],
   "effects": [
     {
@@ -17,5 +17,7 @@
     }
   ],
   "visibility": "available",
-  "toggleable": true
+  "toggleable": true,
+  "spell": "irons_spellbooks:lightning_bolt",
+  "modifier": "mastery:native_spell"
 }

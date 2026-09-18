@@ -76,7 +76,7 @@ public final class FeatureSmoke {
                 case "fixture" -> {if(age>25&&ClientState.progress().rank(NODE)==1&&ClientState.capacity()>0){check(ClientState.nodeEnabled(NODE),"New active node enabled");check(ClientState.nodeEnabled("mastery:fireball/efficiency"),"New modifier enabled");REPORT.addProperty("new_nodes_enabled",true);center(mc,NODE);next("ready_hold");}}
                 case "ready_hold" -> {if(age>12){point(NODE);DINGS.clear();beacons=0;map.mouseClicked(x,y,0);next("hold_vertical");}}
                 case "hold_vertical" -> {
-                    if(age==8){check(DINGS.isEmpty(),"No dings before hold delay");capture(mc,"00-hold-delay.png");}
+                    if(age==1){check(DINGS.isEmpty(),"No dings before hold delay");capture(mc,"00-hold-delay.png");}
                     if(age==22)capture(mc,"01-hold-vertical.png");
                     if(age>=42&&ClientState.progress().rank(NODE)==2){map.mouseReleased(x,y,0);check(DINGS.size()==8&&beacons==1,"Eight progress dings then one beacon power select");for(int i=1;i<8;i++)check(DINGS.get(i)>DINGS.get(i-1),"Rising ding pitch");REPORT.add("ding_pitches",new Gson().toJsonTree(DINGS));REPORT.addProperty("hold_unlock",true);center(mc,NODE);next("selection");}
                 }

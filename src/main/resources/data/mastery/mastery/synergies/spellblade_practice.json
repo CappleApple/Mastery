@@ -1,7 +1,7 @@
 {
   "tree": "mastery:two_handed",
-  "name": "Spellblade Practice",
-  "description": "A passive bonus earned through Two-Handed and Fire practice.",
+  "name": "Flame Blade",
+  "description": "",
   "icon": "minecraft:blaze_powder",
   "type": "synergy",
   "cost": 1,
@@ -28,9 +28,19 @@
   "effects": [
     {
       "type": "mastery:attribute",
-      "attribute": "minecraft:generic.attack_damage",
-      "amount": 0.5,
-      "operation": "add_value"
+      "attribute": "mastery:fire_weapon_damage",
+      "amount": 0.1,
+      "operation": "add_value",
+      "context": "mastery:two_handed",
+      "display_name": "Two-Handed Weapon Fire Damage"
     }
-  ]
+  ],
+  "root_tree": {
+    "id": "mastery:flame_blade",
+    "xp_base": 25,
+    "xp_growth": 10,
+    "point_every": 1,
+    "xp_attribute": "mastery:flame_blade_experience_gain",
+    "section": "southeast"
+  }
 }

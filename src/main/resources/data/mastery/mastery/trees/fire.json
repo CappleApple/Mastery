@@ -1,4 +1,9 @@
 {
+  "damage_filter": {
+    "elements": [
+      "irons_spellbooks:fire"
+    ]
+  },
   "name": "Fire",
   "description": "Deal damage classified by Iron's Spells as Fire magic to earn XP.",
   "icon": "minecraft:blaze_powder",

@@ -26,7 +26,11 @@ public final class GraphValidator {
             Map<String, Set<String>> graph = new LinkedHashMap<>();
             definitions.nodes().forEach((id, node) -> {
                 Set<String> parents = new HashSet<>();
-                node.dependencyLeaves().forEach(dependency -> parents.add(dependency.node()));
+                boolean independent=PromotedTrees.root(definitions,node.tree())!=null;
+                node.dependencyLeaves().forEach(dependency -> {
+                    NodeDefinition parent=definitions.nodes().get(dependency.node());
+                    if(!independent||parent!=null&&parent.tree().equals(node.tree()))parents.add(dependency.node());
+                });
                 graph.put(id, parents);
             });
             cached = new DepthCache(definitions, Map.copyOf(depths(graph, "node dependencies", new ArrayList<>())));
@@ -44,6 +48,8 @@ public final class GraphValidator {
         List<String> errors = new ArrayList<>();
         com.cappleapple.mastery.elemental.ElementalValidation.validate(definitions,errors);
         com.cappleapple.mastery.mechanics.MechanicsValidation.validate(definitions,errors);
+        com.cappleapple.mastery.classes.ClassValidation.validate(definitions,errors);
+        com.cappleapple.mastery.progression.ExperienceRules.validate(definitions,errors);
         Map<String, Set<String>> hierarchy = new LinkedHashMap<>();
         definitions.groups().forEach((id, group) -> hierarchy.put(id, parent(group.parent())));
         definitions.trees().forEach((id, tree) -> {

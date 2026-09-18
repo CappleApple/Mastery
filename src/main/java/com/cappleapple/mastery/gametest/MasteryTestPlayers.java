@@ -22,6 +22,14 @@ final class MasteryTestPlayers {
             grace.setAccessible(true); grace.setInt(player, 0);
         } catch (ReflectiveOperationException error) { throw new IllegalStateException("Unable to disable test spawn grace", error); }
         player.getAttribute(dev.shadowsoffire.apothic_attributes.api.ALObjects.Attributes.CRIT_CHANCE).setBaseValue(0);
+        com.cappleapple.mastery.MasteryRuntime.progress(player).selectedClass("mastery:test_selected");
+        com.cappleapple.mastery.MasteryRuntime.progress(player).classRewardsGranted(true);
+        return player;
+    }
+    static net.minecraft.server.level.ServerPlayer createUnselected(GameTestHelper helper) {
+        var player = createCombat(helper);
+        com.cappleapple.mastery.MasteryRuntime.progress(player).selectedClass("");
+        com.cappleapple.mastery.MasteryRuntime.progress(player).classRewardsGranted(false);
         return player;
     }
     static FakePlayer create(GameTestHelper helper) {
@@ -31,6 +39,8 @@ final class MasteryTestPlayers {
             @Override public boolean isSpectator(){return false;}
         };
         player.getAttribute(dev.shadowsoffire.apothic_attributes.api.ALObjects.Attributes.CRIT_CHANCE).setBaseValue(0);
+        com.cappleapple.mastery.MasteryRuntime.progress(player).selectedClass("mastery:test_selected");
+        com.cappleapple.mastery.MasteryRuntime.progress(player).classRewardsGranted(true);
         return player;
     }
 }

@@ -4,7 +4,7 @@ Integration entry points live under `com.cappleapple.mastery.api`. Java binary c
 
 Access player state on the server thread. Register providers and handlers during common setup, using `enqueueWork`, before datapack loading. Common handlers must not import client classes.
 
-## Proficiency and class grants
+## Proficiency grants
 
 ```java
 MasteryAPI.grantPoints(player, "mastery:two_handed", 3);
@@ -15,6 +15,8 @@ MasteryAPI.grantXp(player, "mastery:fire", 10);
 ```
 
 `player` is a `ServerPlayer`. Positive point grants discover that independent tree. Grant methods return `ProgressionService.Change` with `success()` and `message()`; invalid IDs, nonfinite XP, and negative grants fail. Each balance belongs to one tree.
+
+`grantXp` accepts the unmodified earned amount and applies global, per-tree, and active XP-effect modifiers once. Direct point grants remain exact. Promoted trees reject earned XP until their root and retained prerequisites are eligible. See [XP modifiers](experience.md) for the calculation and [classes](classes.md) for the separate one-time class selection system.
 
 `ProficiencyChangedEvent` is posted on the NeoForge game bus for XP/level mutations and exposes the player, tree ID, previous level, and current level.
 
@@ -42,6 +44,6 @@ For custom usage events, choose an event name and context fields matching the in
 
 `api.spell.SpellModifierRegistry.register(id, SpellModifier)` registers a modifier for an existing Iron's spell. The callback receives the server player, native spell ID, effective node rank, effect parameters, and a `SpellModifiers` accumulator.
 
-Use `addLevels`, `multiplyMana`, `multiplyCooldown`, and `multiplyCastTime` to adjust native calculations. Do not retain the accumulator or mutate a shared spell definition. Duplicate IDs fail registration. See [spell modifiers](spells.md) for the bundled data contract.
+Use `addLevels`, `addCharges`, `multiplyMana`, `multiplyCooldown`, and `multiplyCastTime` to adjust native calculations. Do not retain the accumulator or mutate a shared spell definition. `addCharges` adds an integer bonus consumed by the optional Tempo Not Time charge event integration; `extraCharges()` reads the aggregate bonus. Duplicate IDs fail registration. See [spell modifiers](spells.md) for the bundled data contract.
 
 This API does not register or execute new spells. Spell identity and casting remain in Iron's registry and implementation.

@@ -1,5 +1,5 @@
 {
-  "tree": "mastery:fire",
+  "tree": "mastery:flame_blade",
   "name": "Fire Infusion",
   "description": "Each rank adds 10% of base weapon damage as fire damage.",
   "icon": "minecraft:book",
@@ -8,7 +8,7 @@
   "max_rank": 5,
   "level": 0,
   "dependencies": [
-    "mastery:fire/foundation"
+    "mastery:spellblade_practice"
   ],
   "effects": [
     {

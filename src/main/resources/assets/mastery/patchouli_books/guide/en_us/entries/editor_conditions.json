@@ -1,5 +1,5 @@
 {
-  "name": "Health and Keyword Checks",
+  "name": "Damage, Health and Keywords",
   "category": "mastery:editor",
   "icon": "minecraft:golden_apple",
   "sortnum": 4,
@@ -29,6 +29,26 @@
       "type": "patchouli:text",
       "title": "An Interaction",
       "text": "To require scorch before a lightning effect, add a keyword condition to the lightning action, select mastery:scorch, and use min 1. Follow with remove_keyword if the interaction consumes scorch. These are ordinary script fields, with no Java required."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "With Damage Type",
+      "text": "Add a Damage condition to hit, hurt, kill, or death. Categories selects melee, ranged, magic, physical, or elemental. Elements selects Mastery damage definitions or native schools, including slashing and piercing. Damage types and Damage tags use native registry IDs."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Combining Filters",
+      "text": "Entries inside one list are alternatives. Each populated list must match. Categories melee plus Elements mastery:fire means melee with fire damage. Two Damage conditions can require both melee and magic. Combine these with health or keyword conditions. Empty lists add no restriction; one filter is required."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Actual Damage",
+      "text": "Hit and hurt inspect all portions that actually dealt damage, once per attack. Canceled and immune portions do not qualify. Kill and death inspect the fatal portion. Equipment changes after impact do not change queued filters. Nearby action targets retain the original event damage filters."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Magic and Keywords",
+      "text": "Native Iron schools count as magic and elemental. Extend magic classification through the mastery:is_magic damage-type tag. Periodic keyword ticks and stack threshold actions have no originating hit, so Damage conditions there do not pass. Use health or keyword checks instead."
     }
   ]
 }

@@ -1,0 +1,20 @@
+{
+  "tree": "mastery:two_handed",
+  "name": "Flame Edge",
+  "description": "Each rank adds 10% of weapon damage as Fire.",
+  "icon": "minecraft:blaze_powder",
+  "type": "passive",
+  "dependencies": [
+    "mastery:spellblade_practice"
+  ],
+  "max_rank": 3,
+  "cost": 1,
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "mastery:fire_weapon_damage",
+      "amount": 0.1
+    }
+  ],
+  "visibility": "available"
+}

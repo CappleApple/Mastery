@@ -11,6 +11,36 @@ class GraphLayoutTest {
     private GraphLayout.Entry node(String id, String tree, List<String> deps, long order) {
         return new GraphLayout.Entry(id, "", tree, GraphLayout.Kind.NODE, deps, Set.of(), order, order);
     }
+    @Test void firstLayoutRecoversEveryMovedOctantWithMissingOrStaleDirections() {
+        var graph=List.of(tree("t"),node("manual","t",List.of(),1),node("automatic","t",List.of(),2));
+        var offsets=Map.of("manual",new GraphLayout.Point(33,-21));
+        for(var drop:directions().entrySet())for(var previous:List.of(Map.<String,String>of(),Map.of("t","south"))) {
+            var root=new GraphLayout.Point(drop.getValue().x()*900,drop.getValue().y()*900);
+            var saved=Map.of("t",root);
+            var recovered=GraphLayout.restoreOrientations(graph,saved,offsets,previous);
+            assertEquals(drop.getKey(),recovered.get("t"));
+            var result=GraphLayout.restoreOffsets(GraphLayout.arrange(graph,saved,Set.of("t"),recovered,Set.of("manual")),graph,offsets,Set.of("manual"));
+            var automatic=result.anchors().get("automatic");
+            assertEquals(138,(automatic.x()-root.x())*drop.getValue().x()+(automatic.y()-root.y())*drop.getValue().y(),1e-8,drop.getKey());
+            assertEquals(offsets.get("manual"),GraphLayout.relativeOffsets(result.anchors(),GraphLayout.primaryParents(graph)).get("manual"));
+            assertEquals(Map.of("t",root),saved);
+        }
+    }
+    @Test void promotedRootDirectionUsesRestoredAncestorOffsetsBeforePlacement() {
+        var graph=List.of(tree("t"),node("gate","t",List.of(),1),
+                new GraphLayout.Entry("promoted","gate","promoted",GraphLayout.Kind.TREE,List.of(),Set.of(),0,0,"south"),
+                node("child","promoted",List.of(),2));
+        var saved=Map.of("t",new GraphLayout.Point(900,0));
+        var offsets=Map.of("gate",new GraphLayout.Point(-1800,0),"promoted",new GraphLayout.Point(0,0));
+        var recovered=GraphLayout.restoreOrientations(graph,saved,offsets,Map.of("promoted","south"));
+        assertEquals("east",recovered.get("t"));assertEquals("west",recovered.get("promoted"));
+        var result=GraphLayout.restoreOffsets(GraphLayout.arrange(graph,saved,Set.of("t","promoted"),recovered,Set.of("gate")),graph,offsets,Set.of("gate"));
+        assertEquals(new GraphLayout.Point(-900,0),result.anchors().get("promoted"));
+        assertTrue(result.anchors().get("child").x()<result.anchors().get("promoted").x());
+    }
+    @Test void unsavedRootsKeepTheirAuthoredDirection() {
+        assertTrue(GraphLayout.restoreOrientations(List.of(tree("t")),Map.of(),Map.of(),Map.of()).isEmpty());
+    }
     @Test void rotatingRootCarriesCustomizedChildrenAndGrandchildrenThroughDiagonalOctants() {
         var graph=List.of(tree("root"),node("child","root",List.of(),1),node("grandchild","root",List.of("child"),2),tree("other"));
         Map<String,GraphLayout.Point> anchors=new HashMap<>(Map.of("root",new GraphLayout.Point(200,300),

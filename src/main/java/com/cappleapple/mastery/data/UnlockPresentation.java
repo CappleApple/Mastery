@@ -6,7 +6,7 @@ import java.util.Set;
 /** Tree values remain literal defaults; resolution happens against the current datapack snapshot. */
 public record UnlockPresentation(String fillDirection, String progressSound, String completeSound, int holdDelayMs) {
     public static final UnlockPresentation INHERIT = new UnlockPresentation("default", "default", "default");
-    public static final UnlockPresentation DEFAULTS = new UnlockPresentation("vertical", "minecraft:entity.experience_orb.pickup", "minecraft:block.beacon.power_select",500);
+    public static final UnlockPresentation DEFAULTS = new UnlockPresentation("vertical", "minecraft:entity.experience_orb.pickup", "minecraft:block.beacon.power_select",100);
     public UnlockPresentation(String fillDirection,String progressSound,String completeSound){this(fillDirection,progressSound,completeSound,-1);}
     public UnlockPresentation {
         if(holdDelayMs < -1 || holdDelayMs > 60000)throw new IllegalArgumentException("unlock.hold_delay_ms must be default or 0..60000");

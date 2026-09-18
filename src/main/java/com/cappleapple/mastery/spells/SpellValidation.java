@@ -20,8 +20,8 @@ final class SpellValidation {
             else if(definition.level()<1||definition.level()>spell.getMaxLevel()) errors.add("spell "+id+": base level must be between 1 and "+spell.getMaxLevel());
         });
         definitions.nodes().forEach((id,node) -> {
-            if(!node.modifier().isBlank()&&SpellModifierRegistry.get(node.modifier())==null) errors.add("node "+id+": unknown native spell modifier "+node.modifier());
-            if(!node.modifier().isBlank()&&node.spell().isBlank()&&node.effects().stream().noneMatch(e->hasExplicitTarget(e,definitions,0)))errors.add("node "+id+": equipped modifier needs a node spell or an explicit spell_modifier spell filter");
+            if(node.spellModifier()&&SpellModifierRegistry.get(node.modifier())==null) errors.add("node "+id+": unknown native spell modifier "+node.modifier());
+            if(node.spellModifier()&&node.spell().isBlank()&&node.effects().stream().noneMatch(e->hasExplicitTarget(e,definitions,0)))errors.add("node "+id+": equipped modifier needs a node spell or an explicit spell_modifier spell filter");
             for(var effect:node.effects()) modifier(effect,"node "+id,definitions,errors,0);
         });
         definitions.effects().forEach((id,effect)->modifier(effect,"effect "+id,definitions,errors,0));
@@ -54,7 +54,10 @@ final class SpellValidation {
         }
         for(var entry:effect.entrySet()) {
             String key=entry.getKey(); var value=entry.getValue();
-            if(key.equals("spell_level")) {
+            if(key.equals("extra_charges")) {
+                if(!isNumber(value)||value.getAsDouble()!=Math.rint(value.getAsDouble())||value.getAsDouble()<0||value.getAsDouble()>10000)
+                    errors.add(path+": extra_charges must be an integer between 0 and 10000");
+            } else if(key.equals("spell_level")) {
                 if(!isNumber(value)||value.getAsDouble()!=Math.rint(value.getAsDouble())||Math.abs(value.getAsDouble())>255)
                     errors.add(path+": spell_level must be an integer between -255 and 255");
             } else if(Set.of("mana_multiplier","cooldown_multiplier","cast_time_multiplier").contains(key)) {

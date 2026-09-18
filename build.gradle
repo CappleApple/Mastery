@@ -38,6 +38,26 @@ neoForge {
             programArguments.addAll '--width', '1100', '--height', '720', '--username', 'MasterySmoke'
             systemProperty 'mastery.mechanicsSmoke', 'true'
         }
+        clientSpellDetailsSmoke {
+            client()
+            gameDirectory = project.layout.projectDirectory.dir('run-client-smoke')
+            programArguments.addAll '--width', '1400', '--height', '960', '--username', 'MasteryC144521'
+            systemProperty 'mastery.spellDetailsSmoke', 'true'
+        }
+        clientLayoutSmoke {
+            client()
+            gameDirectory = project.layout.projectDirectory.dir('run-client-smoke')
+            programArguments.addAll '--width', '1100', '--height', '720', '--username', 'MasteryC144521'
+            systemProperty 'mastery.layoutSmoke', providers.gradleProperty('masteryLayoutSmoke').getOrElse('save')
+        }
+        clientClassesSmoke {
+            client()
+            gameDirectory = project.layout.projectDirectory.dir('run-client-smoke')
+            programArguments.addAll '--width', '1100', '--height', '720', '--username', providers.gradleProperty('masteryClassesSmokeUser').getOrElse('MasteryClassSmoke')
+            systemProperty 'mastery.classesSmoke', 'true'
+            systemProperty 'mastery.reopenSmoke', providers.gradleProperty('masteryReopenSmoke').getOrElse('false')
+            systemProperty 'mastery.selectorPreviewSmoke', providers.gradleProperty('masterySelectorPreviewSmoke').getOrElse('false')
+        }
         clientFeatureSmoke {
             client()
             gameDirectory = project.layout.projectDirectory.dir('run-client-smoke')
@@ -53,6 +73,12 @@ neoForge {
             server()
             gameDirectory = project.layout.projectDirectory.dir('run-integration')
             programArgument '--nogui'
+        }
+        clientExtraChargesSmoke {
+            client()
+            gameDirectory = project.layout.projectDirectory.dir('run-client-smoke')
+            programArguments.addAll '--width', '1400', '--height', '960', '--username', 'MasteryC144521'
+            systemProperty 'mastery.extraChargesSmoke', 'true'
         }
         optionalGameTestServer {
             type = 'gameTestServer'
@@ -99,8 +125,13 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release = 21
 }
-tasks.withType(Jar).configureEach { includeEmptyDirs = false }
-tasks.named('jar', Jar) { exclude 'com/cappleapple/mastery/gametest/**', 'com/cappleapple/mastery/client/validation/**' }
+tasks.withType(Jar).configureEach {
+    includeEmptyDirs = false
+    from('LICENSE')
+}
+tasks.named('jar', Jar) {
+    exclude 'com/cappleapple/mastery/gametest/**', 'com/cappleapple/mastery/client/validation/**'
+}
 def metadata = tasks.register('generateModMetadata', ProcessResources) {
     inputs.properties([mod_version: mod_version, neo_version: neo_version])
     expand([mod_version: mod_version, neo_version: neo_version])
@@ -116,6 +147,7 @@ def demoDatapack = tasks.register('demoDatapack', Zip) {
     includeEmptyDirs = false
     archiveFileName = "mastery-demo-${project.version}.zip"
     destinationDirectory = layout.buildDirectory.dir('distributions')
+    from('LICENSE')
     from('examples/demo')
     from('src/main/resources/data') { into 'data' }
 }

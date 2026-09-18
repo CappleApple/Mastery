@@ -24,8 +24,14 @@ class ScriptSchemaTest {
         JsonObject form=EditorSchema.fields("keywords","/threshold_actions/conditions",condition);
         assertTrue(form.has("keyword"));assertTrue(form.has("min"));assertTrue(form.has("max"));
         assertFalse(form.has("radius"));assertFalse(form.has("tree"));
-        assertEquals(List.of("health","keyword"),EditorSchema.choices("keywords","/threshold_actions/conditions/type","type"));
+        assertEquals(List.of("health","keyword","damage"),EditorSchema.choices("keywords","/threshold_actions/conditions/type","type"));
         assertEquals(ScriptSchema.ACTIONS,EditorSchema.choices("triggers","/actions/type","type"));
+    }
+    @Test void damageConditionFormExposesEveryFilterList() {
+        var condition=ScriptSchema.condition("damage");
+        var fields=EditorSchema.fields("triggers","/conditions",condition);
+        for(String field:com.cappleapple.mastery.mechanics.DamageContext.FIELDS)assertTrue(fields.get(field).isJsonArray());
+        assertFalse(fields.has("target"));assertFalse(fields.has("amount"));
     }
     @Test void nestedCostLeavesUseCostKindsRatherThanRequirementKinds() {
         JsonObject cost=EditorSchema.entry("/costs/and/or").getAsJsonObject();

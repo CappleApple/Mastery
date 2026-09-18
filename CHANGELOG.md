@@ -1,5 +1,124 @@
 # Changelog
 
+## 1.4.0 - 2026-09-18
+
+### Added
+
+- Tree modifiers apply to matching damage and inherit into sub-trees by default.
+- Keyword modifiers adjust applied stacks, damage, and duration; keywords support delayed stack decay and stack-loss action chains.
+- A tree’s unlocked skills grant that tree XP from their damage regardless of damage type, without duplicate same-tree damage awards.
+- Flaming Strike is available in Flame Blade.
+- Spell stats show current maximum charges when Tempo Not Time is active, including level changes, charge modifiers, and unslotted skills.
+
+- Held spell stages increase native level above the modified base by default. Pack authors can disable this through charge settings.
+- Yellow charge-bar markers show where held casts cost another Tempo charge. Held casts pay those charges and stop scaling beyond their available charge budget.
+
+### Changed
+
+- Adopted CC BY-NC-SA 4.0 with additional permission for Minecraft modpacks and servers; downloads include the license.
+- Flame Blade’s external XP source requires two-handed melee Fire damage. Its root grants +10% Two-Handed Weapon Fire Damage.
+- Square skill nodes have rounded corners. Tree roots are 30% larger by default, with size controls in data and the visual editor.
+
+### Fixed
+
+- Removing a node during a live datapack reload no longer crashes an open skill map.
+
+## 1.3.7 - 2026-09-18
+
+### Added
+
+- Spell modifiers can add Tempo Not Time charges per enabled rank through `extra_charges`. Changes update the charge HUD before casting and during recharge.
+
+### Fixed
+
+- Triangle node icons sit lower within the shape in the skill map and class preview.
+- Moved trees recover their expansion direction from their saved root position on first open after joining a world.
+
+## 1.3.6 - 2026-09-17
+
+### Fixed
+
+- Slotted spell levels and Tempo charge capacity update when spell-level modifiers are enabled, disabled, or upgraded, including while earlier casts recharge.
+- Spell details show the Scroll Forge description, current rank and native stats, then equipped modifier effects. Mana cost is hidden when Tempo disables mana.
+
+### Changed
+
+- Removed duplicate enabled-state text, assignment counts, modifier-slot counts, next-rank previews, and repeated control hints from skill details.
+- Unbought modifier nodes appear only while their spell has a free modifier slot; purchased nodes remain visible.
+
+### Added
+
+- Hover explanations for named keywords in screen text and tooltips, with stack limits, duration, periodic actions, and threshold effects. Keyword descriptions can be edited in the visual editor.
+
+## 1.3.5 - 2026-09-17
+
+### Fixed
+
+- Player-customized tree layouts now save to the correct world/player file after login and retain collapsed branches on reconnect.
+- Hotbar sets are limited to four spell slots each. Removed their slot-page arrows, page number, and paging hint; page keys no longer change hotbar-set bindings.
+
+## 1.3.4 - 2026-09-17
+
+### Fixed
+
+- Scorch modifies Fireball and Gathering Thunder modifies Lightning Bolt. Their triggers require assignment and an available modifier slot, and only react to damage from their assigned spell.
+- Choosing the modifier node type now enables modifier assignment rules instead of only changing its shape.
+
+## 1.3.3 - 2026-09-17
+
+### Fixed
+
+- Unlocked nodes no longer repeat their initial purchase cost and unlock requirements in the details panel. Eligible next-rank costs remain in hover tooltips.
+
+## 1.3.2 - 2026-09-17
+
+### Changed
+
+- Parent prerequisite and child branch line styles can be edited independently. Defaults are dashed and solid, respectively.
+- Scorch and Gathering Thunder are modifier nodes, using triangular shapes by default.
+- The default delay before hold-to-invest begins is now 100 ms.
+- Flame Blade gains XP from either Fire damage or two-handed melee damage, using a data-defined OR condition.
+
+### Fixed
+
+- Children of promoted roots such as Flame Blade use branch lines instead of cross-tree prerequisite lines.
+- Opening or returning to the skill map restores node positions immediately instead of replaying expansion animations. Manual expansion and collapse still animate.
+
+## 1.3.1 - 2026-09-17
+
+### Added
+
+- Damage filters for combat triggers and action conditions, with in-game selectors for categories, damage types, schools, and tags.
+- Pentagon and triangle node shapes. Roots, passives, actives, and modifiers now default to pentagons, circles, squares, and triangles respectively.
+
+### Changed
+
+- Class selection now shows an armored player preview, starting skills, a portrait inventory, hover tooltips, and a scrollable class icon strip.
+- Starter armor equips on selection, preserving displaced gear in inventory or the saved overflow queue.
+- Fire Infusion and Fire Conversion now belong to Flame Blade. Root nodes display their available tree points.
+- Node details omit balance dumps and repeated control instructions. Upgradeable node tooltips show the next-rank cost.
+
+### Fixed
+
+- Connections remain visible during collapse animations and disappear when fully collapsed.
+- Native HUD addon overlays receive Mastery's active spell list. Tempo Not Time can display charges for prepared skill spells before their first cast.
+
+## 1.3.0 - 2026-09-17
+
+### Added
+
+- Data-defined classes with icons, starting skill points, unlocked skill ranks, item stacks, and persistent attribute modifiers.
+- A join-time class selector, enabled by default through server config, that holds players in spectator mode until they choose a class.
+- Warrior, Ranger, and Mage starting classes, with saved overflow-item delivery and one-time starter rewards.
+- Overall and per-tree proficiency XP attributes, plus tree-filtered XP effects for custom trees.
+- Node promotion into independent tree roots with separate XP sources and point currencies while retaining purchase prerequisites.
+- In-game class and promoted-root editing, Patchouli documentation, and repository references.
+
+### Changed
+
+- Spellblade is now Flame Blade, with its own progression branch and point currency.
+- Administrative XP grants use the exact requested amount; gameplay and API XP awards apply the player's gain modifiers.
+
 ## 1.2.1 - 2026-09-17
 
 ### Changed

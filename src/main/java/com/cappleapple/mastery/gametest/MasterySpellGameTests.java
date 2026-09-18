@@ -44,6 +44,54 @@ public final class MasterySpellGameTests {
         return stack;
     }
     @GameTest(templateNamespace="minecraft",template="bastion/mobs/empty")
+    public static void preparedLevelsAndStatsFollowModifierChanges(GameTestHelper helper) {
+        var player=player(helper);
+        try {
+            player.setItemSlot(EquipmentSlot.MAINHAND,capacityItem(4));rank(player,"mastery:fireball",1);
+            SpellService.assign(player,SpellService.context(player),0,FIREBALL);
+            rank(player,"mastery:fireball/empowered",1);
+            SpellService.setModifier(player,FIREBALL,"mastery:fireball/empowered",true);
+            for(int rank:new int[]{1,2,3}) {
+                rank(player,"mastery:fireball/empowered",rank);
+                helper.assertTrue(SpellService.preparedSpells(player).getFirst().getLevel()==1+rank,"Prepared level must include each modifier rank once");
+                var snapshot=SpellService.snapshot(player);
+                helper.assertTrue(snapshot.getAsJsonObject("spell_levels").get(FIREBALL).getAsInt()==1+rank,"HUD level differs from prepared spell");
+                helper.assertTrue(snapshot.getAsJsonObject("spell_stats").getAsJsonObject(FIREBALL).get("mana").getAsInt()==SpellRegistry.getSpell(FIREBALL).getManaCost(1+rank),"Mana stats use stale level");
+            }
+            SpellService.setModifier(player,FIREBALL,"mastery:fireball/empowered",false);
+            helper.assertTrue(SpellService.preparedSpells(player).getFirst().getLevel()==1,"Disabling modifier must restore base prepared level");
+            helper.assertTrue(SpellService.snapshot(player).getAsJsonObject("equipped_modifiers").getAsJsonArray(FIREBALL).isEmpty(),"Disabled modifier shown as equipped");
+            SpellService.setModifier(player,FIREBALL,"mastery:fireball/empowered",true);
+            helper.assertTrue(SpellService.preparedSpells(player).getFirst().getLevel()==4,"Re-enabling must restore upgraded prepared level");
+            rank(player,"mastery:fireball/empowered",0);SpellService.reconcile(player);
+            rank(player,"mastery:fireball/efficiency",1);rank(player,"mastery:fire/scorch",1);
+            SpellService.setModifier(player,FIREBALL,"mastery:fireball/efficiency",true);SpellService.setModifier(player,FIREBALL,"mastery:fire/scorch",true);
+            helper.assertTrue(!SpellService.snapshot(player).getAsJsonArray("available_modifier_nodes").contains(new com.google.gson.JsonPrimitive("mastery:fireball/empowered")),"Full spell must hide unbought modifier");
+            SpellService.setModifier(player,FIREBALL,"mastery:fire/scorch",false);
+            helper.assertTrue(SpellService.snapshot(player).getAsJsonArray("available_modifier_nodes").contains(new com.google.gson.JsonPrimitive("mastery:fireball/empowered")),"Freed slot must reveal unbought modifier");
+            helper.succeed();
+        } finally { MasteryRuntime.logout(player);player.discard(); }
+    }
+    @GameTest(templateNamespace="minecraft",template="bastion/mobs/empty")
+    public static void hotbarSetsRejectFifthAssignmentsAndCastsAndTrimOldPages(GameTestHelper helper) {
+        var player=player(helper);
+        try {
+            player.setItemSlot(EquipmentSlot.MAINHAND,capacityItem(64));rank(player,"mastery:fireball",1);
+            String context=BindingSlots.hotbar(0);
+            helper.assertTrue(SpellService.capacity(player)>4,"High-capacity fixture");
+            helper.assertTrue(SpellService.assign(player,context,3,FIREBALL).isEmpty(),"Fourth hotbar slot should accept a spell");
+            helper.assertTrue(!SpellService.assign(player,context,4,FIREBALL).isEmpty(),"Server accepted fifth hotbar slot");
+            helper.assertTrue(!SpellService.press(player,4).isEmpty(),"Server accepted fifth hotbar cast");
+            MasteryRuntime.progress(player).loadout(context).add(FIREBALL);
+            SpellService.reconcile(player);
+            helper.assertTrue(MasteryRuntime.progress(player).loadout(context).size()==4,"Old hotbar page survived reconciliation");
+            helper.assertTrue(BindingSlots.get(MasteryRuntime.progress(player).loadouts(),context,3).equals(FIREBALL),"First four slots were changed");
+            helper.assertTrue(SpellService.bindingMode(player,"quick_cast").isEmpty(),"Quick-cast mode switch");
+            helper.assertTrue(SpellService.assign(player,BindingSlots.QUICK,7,FIREBALL).isEmpty(),"Quick-cast slot range was incorrectly truncated");
+            helper.succeed();
+        }finally{MasteryRuntime.logout(player);player.discard();}
+    }
+    @GameTest(templateNamespace="minecraft",template="bastion/mobs/empty")
     public static void weaponBonusesFollowBetterCombatAndNativeApothicArrows(GameTestHelper helper) {
         var player=player(helper);
         try {
@@ -112,7 +160,7 @@ public final class MasterySpellGameTests {
 
                 helper.assertTrue(spawned.size()==3,"Expected native Firebolt plus two burst shots; got "+spawned.size()+", spawn ticks="+spawnTicks+", mana="+magic.getMana());
                 helper.assertTrue(spawnTicks.getFirst()>=49,"Instant spell spawned before its configured charge duration: "+spawnTicks);
-                helper.assertTrue(magic.getMana()>=100-SpellRegistry.getSpell(id).getManaCost(1)&&magic.getMana()<100,"Burst charged native mana more than once");
+                helper.assertTrue(magic.getMana()>=100-SpellRegistry.getSpell(id).getManaCost(3)&&magic.getMana()<100,"Burst charged native mana more than once");
                 helper.assertTrue(magic.getPlayerCooldowns().isOnCooldown(SpellRegistry.getSpell(id)),"Burst lost native cooldown");
                 helper.succeed();
             } finally {net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(capture);spawned.forEach(net.minecraft.world.entity.Entity::discard);MasteryRuntime.install(original);MasteryRuntime.logout(player);player.discard();}
@@ -162,20 +210,23 @@ public final class MasterySpellGameTests {
         var spell=SpellRegistry.getSpell(FIREBALL);int base=spell.getEffectiveCastTime(1,player);
         helper.getLevel().addNewPlayer(player);
         helper.assertTrue(SpellService.assign(player,SpellService.context(player),0,FIREBALL).isEmpty(),"Charge fixture assignment failed");
+        var spawned=new java.util.ArrayList<io.redspace.ironsspellbooks.entity.spells.fireball.MagicFireball>();
+        java.util.function.Consumer<net.neoforged.neoforge.event.entity.EntityJoinLevelEvent> listener=event->{if(event.getEntity() instanceof io.redspace.ironsspellbooks.entity.spells.fireball.MagicFireball ball&&ball.getOwner()==player)spawned.add(ball);};
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(listener);
         SpellService.press(player,0);
         helper.assertTrue(magic.getCastDuration()==base+40,"Two charge ranks did not add two equal windows");
         helper.assertTrue(magic.getCastingSpellLevel()==spell.getLevelFor(1,player),"Charge ranks raised the base spell level");
         helper.runAfterDelay(magic.getCastDuration()+3,()->{
             try {
-                var fireballs=helper.getLevel().getEntitiesOfClass(io.redspace.ironsspellbooks.entity.spells.fireball.MagicFireball.class,player.getBoundingBox().inflate(30),e->e.getOwner()==player);
+                var fireballs=spawned;
                 helper.assertTrue(!fireballs.isEmpty(),"Native charged fireball did not spawn");
                 var fireball=fireballs.getFirst();
                 helper.assertTrue(Math.abs(((NativeProjectileScale)fireball).mastery$getScale()-2)<.01,"Charge scale was not synchronized on native entity");
                 helper.assertTrue(fireball.getExplosionRadius()>=6,"Charged explosion radius did not grow");
-                helper.assertTrue(magic.getMana()>=100-spell.getManaCost(1)&&magic.getMana()<100,"Native mana was charged more than once");
+                helper.assertTrue(magic.getMana()>=100-spell.getManaCost(3)&&magic.getMana()<100,"Final-level native mana was charged more than once");
                 helper.assertTrue(magic.getPlayerCooldowns().isOnCooldown(spell),"Native cooldown missing");
                 helper.succeed();
-            } finally {MasteryRuntime.logout(player);player.discard();}
+            } finally {net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(listener);MasteryRuntime.logout(player);player.discard();}
         });
     }
     @GameTest(templateNamespace="minecraft",template="bastion/mobs/empty")
@@ -284,6 +335,26 @@ public final class MasterySpellGameTests {
             helper.assertTrue(magic.getPlayerCooldowns().getSpellCooldowns().get(FIREBALL).getCooldownRemaining()==expected,"Native cooldown did not apply enabled multiplier");
             helper.succeed();
         } finally { MasteryRuntime.logout(player); player.discard(); }
+    }
+    @GameTest(batch="mastery_held_level",templateNamespace="minecraft",template="bastion/mobs/empty",timeoutTicks=140)
+    public static void heldStagesIncreaseAboveTheModifiedBaseAndPayFinalNativeMana(GameTestHelper helper) {
+        var player=player(helper);player.setItemSlot(EquipmentSlot.MAINHAND,capacityItem(4));player.setNoGravity(true);
+        rank(player,"mastery:fireball",2);rank(player,"mastery:fireball/empowered",1);
+        SpellService.setModifier(player,FIREBALL,"mastery:fireball/empowered",true);
+        var magic=MagicData.getPlayerMagicData(player);magic.setMana(500);helper.getLevel().addNewPlayer(player);
+        int[] cast={0,0};java.util.function.Consumer<io.redspace.ironsspellbooks.api.events.SpellOnCastEvent> capture=event->{
+            if(event.getEntity()==player){cast[0]=event.getSpellLevel();cast[1]=event.getManaCost();}
+        };
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST,false,io.redspace.ironsspellbooks.api.events.SpellOnCastEvent.class,capture);
+        helper.assertTrue(SpellService.effectiveLevel(player,FIREBALL)==2,"Modifier establishes native base level");
+        SpellService.assign(player,SpellService.context(player),0,FIREBALL);SpellService.press(player,0);
+        helper.runAfterDelay(magic.getCastDuration()+4,()->{
+            try {
+                helper.assertTrue(cast[0]==4,"Two held stages should add to modified base 2, got "+cast[0]);
+                helper.assertTrue(cast[1]==SpellRegistry.getSpell(FIREBALL).getManaCost(4),"Held native level must pay its actual mana cost");
+                helper.assertTrue(SpellService.effectiveLevel(player,FIREBALL)==2,"Held level must not rewrite the prepared base");helper.succeed();
+            } finally {net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(capture);MasteryRuntime.logout(player);player.discard();}
+        });
     }
     @GameTest(templateNamespace="minecraft",template="bastion/mobs/empty",timeoutTicks=120)
     public static void nativeServerTickCompletesPreparedSpell(GameTestHelper helper) {

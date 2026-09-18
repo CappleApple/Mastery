@@ -1,0 +1,54 @@
+{
+  "name": "Promote a Skill to a Tree",
+  "category": "mastery:editor",
+  "icon": "minecraft:blaze_powder",
+  "sortnum": 15,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Keep the Existing Skill",
+      "text": "Open a node or synergy and add Root tree. Leave Enabled true. The node keeps its ID, rank, costs, prerequisites, requirements, and book gate. This means an existing investment can open a new branch without becoming a free unlock."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Name Its Currency",
+      "text": "Inside Root tree, set Id to the new tree ID, for example mastery:flame_blade. It must not conflict with an existing tree or node. An empty Id creates the node ID with _tree appended. Name, description, and icon default to the original node."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "XP and Point Rules",
+      "text": "Root tree exposes Xp base, Xp growth, Point every, Points per award, milestones, formula, tier caps, growth section, and Xp attribute. These define the new currency. The root skill itself still buys ranks using its original tree and normal purchase rules."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Connect Descendants",
+      "text": "Children in the same authored tree move under their nearest promoted ancestor and spend the new currency. Their node IDs and existing ranks remain unchanged. A nested promoted node can open another currency while retaining its own parent-tree purchase. Descendant cost depth restarts at zero within the new currency."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Shared Branches",
+      "text": "If a skill crosses multiple promoted branches, set its Tree explicitly to the intended new tree ID. Ambiguous ownership rejects the save. Keep the normal dependency entries as well. A root cannot belong to its own generated tree because that would lock its first purchase behind itself."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Define Its XP Sources",
+      "text": "After saving the root, create an XP source and select the generated tree. Choose its gameplay event, Amount, Scale, and Condition. No XP is copied from the old tree. Locked roots cannot earn XP, and their unconsumed once-only sources remain available after unlocking."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Flame Blade Example",
+      "text": "Flame Blade uses mastery:flame_blade. External damage XP requires Fire school, Two-Handed context, Melee true, and Projectile false. Its root adds +10% Two-Handed Weapon Fire Damage. Flaming Strike belongs to the new tree and earns its XP through automatic skill damage credit."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Edit and Export",
+      "text": "The root icon shows the new tree's XP outline and its original prerequisite connections. Continue editing its Root tree group on the node. Export stores that authored group and the original node owners, avoiding a duplicate generated tree definition.$(br2)Connections has separate Parent line style and Child line style fields: dashed prerequisites and solid branch lines by default. Set either to solid, dashed, or default to inherit."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Inherited Modifiers",
+      "text": "Tree modifiers have Inherit subtrees enabled by default. A promoted tree inherits from its root owner and prerequisite trees. Fire tree modifiers therefore reach Flame Blade, while their damage filter still requires Fire. Disable inheritance on a modifier to keep its spell scope in its direct tree."
+    }
+  ],
+  "flag": "mastery_edit_mode"
+}

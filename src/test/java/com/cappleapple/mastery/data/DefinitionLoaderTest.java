@@ -127,16 +127,28 @@ class DefinitionLoaderTest {
         }
         var result = DefinitionLoader.load(resources);
         assertTrue(result.valid(), String.join("\n", result.errors()));
-        assertEquals(21, result.definitions().trees().size());
+        assertEquals(22, result.definitions().trees().size());
         assertEquals(resources.get("nodes").size()+resources.get("synergies").size(), result.definitions().nodes().size());
-        assertTrue(result.definitions().nodes().containsKey("mastery:fire/scorch"));
+        for(String id:java.util.List.of("mastery:fire/scorch","mastery:lightning/thunder")) {
+            assertEquals(NodeType.MODIFIER,result.definitions().nodes().get(id).type());
+            assertEquals("mastery:native_spell",result.definitions().nodes().get(id).modifier());
+            assertFalse(result.definitions().nodes().get(id).spell().isBlank());
+            assertTrue(result.definitions().nodes().get(id).dependencyLeaves().stream().anyMatch(dep->result.definitions().nodes().get(dep.node()).type()==NodeType.ACTIVE));
+            assertEquals(NodeAppearance.Shape.TRIANGLE,NodeAppearance.parse(SettingsResolver.forNode(result.definitions(),id).getAsJsonObject("appearance")).shape());
+        }
+        assertEquals(100,UnlockPresentation.DEFAULTS.holdDelayMs());
+        assertEquals(100,UnlockPresentation.parse(SettingsResolver.forNode(result.definitions(),"mastery:fire/foundation").getAsJsonObject("unlock")).holdDelayMs());
         assertTrue(result.definitions().nodes().containsKey("mastery:holy/attunement"));
-        assertEquals(9, result.definitions().spells().size());
+        assertEquals(10, result.definitions().spells().size());
+        assertEquals("mastery:flame_blade",result.definitions().nodes().get("mastery:flame_blade/flaming_strike").tree());
+        assertTrue(PromotedTrees.inherits(result.definitions(),"mastery:flame_blade","mastery:fire"));
+        assertTrue(PromotedTrees.inherits(result.definitions(),"mastery:flame_blade","mastery:two_handed"));
+        assertFalse(PromotedTrees.inherits(result.definitions(),"mastery:flame_blade","mastery:lightning"));
         assertTrue(result.definitions().groups().isEmpty(), "Fresh trees are independent and discovered through point grants");
         assertTrue(result.definitions().trees().values().stream().allMatch(tree -> tree.parent().isEmpty()));
         assertTrue(result.definitions().trees().values().stream().allMatch(tree -> tree.pointEvery() == 1));
         assertTrue(result.definitions().spells().keySet().stream().allMatch(id -> id.startsWith("irons_spellbooks:")));
-        assertEquals(9, result.definitions().xpSources().values().stream().filter(source -> source.condition().has("school")
+        assertEquals(10, result.definitions().xpSources().values().stream().filter(source -> source.condition().has("school")
                 && source.condition().get("school").getAsString().startsWith("irons_spellbooks:")).count());
         for (String school : java.util.List.of("fire", "ice", "lightning", "holy", "ender", "blood", "evocation", "nature", "eldritch")) {
             var source = result.definitions().xpSources().get("mastery:" + school + "_damage");

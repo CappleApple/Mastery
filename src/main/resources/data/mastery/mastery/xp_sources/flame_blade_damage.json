@@ -1,0 +1,12 @@
+{
+  "tree": "mastery:flame_blade",
+  "event": "damage",
+  "amount": 1,
+  "scale": "damage",
+  "condition": {
+    "context": "mastery:two_handed",
+    "melee": true,
+    "projectile": false,
+    "school": "irons_spellbooks:fire"
+  }
+}

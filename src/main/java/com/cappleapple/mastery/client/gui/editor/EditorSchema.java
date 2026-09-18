@@ -9,6 +9,12 @@ public final class EditorSchema {
     private static JsonObject object(String json){return JsonParser.parseString(json).getAsJsonObject();}
     public static JsonObject fields(String kind,String path,JsonObject current) {
         String leaf=path.substring(path.lastIndexOf('/')+1);
+        if(kind.equals("classes")) {
+            if(leaf.equals("starting_points")||leaf.equals("starting_skills")||leaf.equals("components"))return new JsonObject();
+            if(leaf.equals("starting_inventory"))return object("{\"id\":\"minecraft:bread\",\"count\":1,\"components\":{}}");
+            if(leaf.equals("attributes"))return object("{\"attribute\":\"minecraft:generic.max_health\",\"amount\":2,\"operation\":\"add_value\"}");
+        }
+        if(leaf.equals("root_tree"))return object("{\"inherit_subtrees\":true,\"skill_damage_xp\":1,\"damage_filter\":{},\"enabled\":true,\"id\":\"\",\"xp_base\":100,\"xp_growth\":20,\"point_every\":1,\"points_per_award\":1,\"point_milestones\":{},\"point_formula\":\"\",\"tier_caps\":[],\"section\":\"south\",\"xp_attribute\":\"\"}");
         if(ScriptSchema.scripted(kind)) {
             if(path.isBlank())return ScriptSchema.root(kind);
             if(leaf.equals("conditions"))return ScriptSchema.conditionFields(current);
@@ -23,10 +29,12 @@ public final class EditorSchema {
                 default -> object("{\"type\":\"points\",\"tree\":\"\",\"amount\":1,\"depth_percent\":0}");
             };
         }
-        if(leaf.equals("appearance"))return object("{\"shape\":\"circle\",\"show_name\":false}");
+        if(leaf.equals("damage_filter"))return object("{\"categories\":[],\"elements\":[],\"damage_types\":[],\"damage_tags\":[]}");
+        if(leaf.equals("appearance"))return object("{\"shape\":\"default\",\"show_name\":false,\"scale\":1,\"root_scale\":1.3}");
+        if(leaf.equals("connections"))return object("{\"parent_line_style\":\"default\",\"child_line_style\":\"default\"}");
         if(leaf.equals("theme"))return object("{\"inner_color\":\"#D3AD5B\",\"outer_color\":\"#604522\",\"gradient\":1}");
-        if(leaf.equals("unlock"))return object("{\"fill_direction\":\"default\",\"progress_sound\":\"default\",\"complete_sound\":\"default\",\"hold_delay_ms\":500}");
-        if(leaf.equals("charge"))return object("{\"enabled\":false,\"ticks_per_level\":20,\"instant_base_ticks\":10,\"max_levels\":16,\"spell_levels_per_stage\":0,\"fireball_size_per_stage\":0,\"fireball_radius_per_stage\":0,\"extra_casts_per_stage\":0,\"burst_interval_ticks\":3}");
+        if(leaf.equals("unlock"))return object("{\"fill_direction\":\"default\",\"progress_sound\":\"default\",\"complete_sound\":\"default\",\"hold_delay_ms\":100}");
+        if(leaf.equals("charge"))return object("{\"enabled\":false,\"ticks_per_level\":20,\"instant_base_ticks\":10,\"max_levels\":16,\"spell_levels_per_stage\":1,\"fireball_size_per_stage\":0,\"fireball_radius_per_stage\":0,\"extra_casts_per_stage\":0,\"burst_interval_ticks\":3}");
         if(leaf.equals("modifier_slots"))return object("{\"base\":2,\"per_level\":1,\"max\":64}");
         if(path.contains("dependencies")) {
             if(current.has("and")||current.has("or"))return new JsonObject();
@@ -38,6 +46,7 @@ public final class EditorSchema {
         if(path.contains("effects")||path.isBlank()&&kind.equals("effects"))return effectFields(current);
         if(!path.isBlank())return new JsonObject();
         JsonObject result=switch(kind) {
+            case "classes" -> object("{\"name\":\"New class\",\"description\":\"\",\"icon\":\"minecraft:book\",\"starting_points\":{},\"starting_skills\":{},\"starting_inventory\":[],\"attributes\":[]}");
             case "trees" -> object("{\"name\":\"New specialization\",\"description\":\"\",\"icon\":\"minecraft:book\",\"section\":\"south\",\"xp_base\":100,\"xp_growth\":20,\"point_every\":1,\"points_per_award\":1,\"point_milestones\":{},\"point_formula\":\"\",\"tier_caps\":[]}");
             case "nodes","synergies" -> object("{\"name\":\"New skill\",\"description\":\"\",\"icon\":\"minecraft:book\",\"tree\":\"\",\"type\":\"passive\",\"dependencies\":[],\"max_rank\":1,\"cost\":1,\"level\":0,\"world_tier\":0,\"requirements\":[],\"effects\":[],\"visibility\":\"available\",\"exclusions\":[],\"toggleable\":true,\"spell\":\"\",\"modifier\":\"\",\"book_token\":\"\"}");
             case "spells" -> object("{\"name\":\"Spell upgrade\",\"description\":\"\",\"icon\":\"minecraft:book\",\"spell\":\"\",\"tree\":\"\",\"level\":1,\"contexts\":[]}");
@@ -50,20 +59,26 @@ public final class EditorSchema {
             default -> new JsonObject();
         };
         if(List.of("trees","nodes","synergies","spells","settings").contains(kind))
-            for(String field:List.of("theme","unlock","charge","modifier_slots","appearance"))result.add(field,new JsonObject());
+            for(String field:List.of("damage_filter","connections","theme","unlock","charge","modifier_slots","appearance"))result.add(field,new JsonObject());
         if(List.of("trees","nodes","synergies","settings").contains(kind)) {
             result.addProperty("effect_context", "");
+            result.addProperty("inherit_subtrees",true);
+            result.addProperty("skill_damage_xp",1);
             result.add("costs",object("{\"type\":\"points\",\"amount\":1}"));
             result.addProperty("cost_depth_percent",0);
         }
+        if(kind.equals("trees"))result.addProperty("xp_attribute","");
+        if(kind.equals("nodes")||kind.equals("synergies"))result.add("root_tree",object("{\"enabled\":true}"));
         return result;
     }
     private static JsonObject effectFields(JsonObject current) {
         var result=object("{\"type\":\"mastery:attribute\",\"ref\":\"\",\"description\":\"\"}");
         String type=current.has("type")?current.get("type").getAsString():"mastery:attribute";
         var detail=switch(type) {
-            case "mastery:attribute" -> object("{\"context\":\"\",\"attribute\":\"minecraft:generic.attack_damage\",\"amount\":1,\"operation\":\"add_value\"}");
-            case "mastery:spell_modifier" -> object("{\"spell\":\"\",\"spell_level\":0,\"mana_multiplier\":1,\"cooldown_multiplier\":1,\"cast_time_multiplier\":1}");
+            case "mastery:attribute" -> object("{\"display_name\":\"\",\"context\":\"\",\"attribute\":\"minecraft:generic.attack_damage\",\"amount\":1,\"operation\":\"add_value\"}");
+            case "mastery:keyword_modifier" -> object("{\"keyword\":\"\",\"stacks\":0,\"stacks_percent\":0,\"damage\":0,\"damage_percent\":0,\"duration\":0,\"duration_percent\":0}");
+            case "mastery:spell_modifier" -> object("{\"spell\":\"\",\"spell_level\":0,\"extra_charges\":0,\"mana_multiplier\":1,\"cooldown_multiplier\":1,\"cast_time_multiplier\":1}");
+            case "mastery:experience_gain" -> object("{\"tree\":\"\",\"amount\":0.1}");
             case "mastery:bonus" -> object("{\"key\":\"active_capacity\",\"spell\":\"\",\"amount\":1}");
             case "mastery:unlock_spell" -> object("{\"spell\":\"\",\"level\":1,\"levels_per_rank\":0}");
             case "mastery:unlock_context" -> object("{\"context\":\"\"}");
@@ -77,7 +92,7 @@ public final class EditorSchema {
         };detail.entrySet().forEach(e->result.add(e.getKey(),e.getValue()));return result;
     }
     private static JsonObject requirementFields(JsonObject current) {
-        return object("{\"type\":\"mastery:condition\",\"ref\":\"\",\"tree\":\"\",\"level\":1,\"node\":\"\",\"rank\":1,\"tier\":0,\"id\":\"\",\"token\":\"\",\"and\":[],\"or\":[],\"not\":{},\"school\":\"\",\"spell\":\"\",\"item\":\"\",\"entity\":\"\",\"block\":\"\",\"damage_type\":\"\",\"dimension\":\"\",\"biome\":\"\",\"item_tag\":\"\",\"offhand\":\"\",\"offhand_tag\":\"\",\"entity_tag\":\"\",\"block_tag\":\"\",\"damage_tag\":\"\",\"biome_tag\":\"\",\"min_damage\":0,\"max_damage\":0,\"min_distance\":0,\"max_distance\":0,\"min_amount\":0,\"max_amount\":0,\"projectile\":false,\"critical\":false,\"blocking\":false,\"empty\":false,\"dual_wield\":false,\"provider_only\":false,\"requires_unlock\":false}");
+        return object("{\"type\":\"mastery:condition\",\"context\":\"\",\"ref\":\"\",\"tree\":\"\",\"level\":1,\"node\":\"\",\"rank\":1,\"tier\":0,\"id\":\"\",\"token\":\"\",\"and\":[],\"or\":[],\"not\":{},\"school\":\"\",\"spell\":\"\",\"item\":\"\",\"entity\":\"\",\"block\":\"\",\"damage_type\":\"\",\"dimension\":\"\",\"biome\":\"\",\"item_tag\":\"\",\"offhand\":\"\",\"offhand_tag\":\"\",\"entity_tag\":\"\",\"block_tag\":\"\",\"damage_tag\":\"\",\"biome_tag\":\"\",\"min_damage\":0,\"max_damage\":0,\"min_distance\":0,\"max_distance\":0,\"min_amount\":0,\"max_amount\":0,\"projectile\":false,\"melee\":false,\"critical\":false,\"blocking\":false,\"empty\":false,\"dual_wield\":false,\"provider_only\":false,\"requires_unlock\":false}");
     }
     public static JsonElement entry(String path) {
         if(path.contains("costs"))return object("{\"type\":\"points\",\"amount\":1}");
@@ -85,11 +100,13 @@ public final class EditorSchema {
         String leaf=path.substring(path.lastIndexOf('/')+1);
         return switch(leaf) {
             case "dependencies" -> object("{\"node\":\"\",\"rank\":1}");
+            case "starting_inventory" -> object("{\"id\":\"minecraft:bread\",\"count\":1}");
+            case "attributes" -> object("{\"attribute\":\"minecraft:generic.max_health\",\"amount\":2,\"operation\":\"add_value\"}");
             case "effects" -> object("{\"type\":\"mastery:attribute\",\"attribute\":\"minecraft:generic.attack_damage\",\"amount\":1,\"operation\":\"add_value\"}");
             case "requirements","and","or" -> object("{\"type\":\"mastery:tree_level\",\"tree\":\"\",\"level\":1}");
             case "tier_caps" -> object("{\"tier\":0,\"max_level\":20}");
             case "point_milestones" -> new JsonPrimitive(1);
-            case "actions","tick_actions","threshold_actions" -> ScriptSchema.action("damage");
+            case "actions","tick_actions","threshold_actions","stacks_lost_actions","all_stacks_lost_actions" -> ScriptSchema.action("damage");
             case "conditions" -> ScriptSchema.condition("health");
             default -> new JsonPrimitive("");
         };
@@ -97,7 +114,7 @@ public final class EditorSchema {
     public static List<String> choices(String kind,String path,String key) {
         if(path.contains("costs")&&key.equals("type"))return List.of("points","experience","item");
         if(ScriptSchema.scripted(kind)) {
-            if(key.equals("type"))return path.endsWith("conditions/type")?List.of("health","keyword"):ScriptSchema.ACTIONS;
+            if(key.equals("type"))return path.endsWith("conditions/type")?List.of("health","keyword","damage"):ScriptSchema.ACTIONS;
             if(key.equals("event"))return List.of("hit","kill","hurt","death");
             if(key.equals("target"))return path.contains("conditions")?List.of("self","target"):List.of("self","target","nearby","aim");
             if(key.equals("center"))return List.of("self","target");
@@ -105,17 +122,18 @@ public final class EditorSchema {
         }
         return switch(key) {
             case "effect_context", "context" -> com.cappleapple.mastery.client.ClientState.definitions().contexts().keySet().stream().sorted().toList();
-            case "shape" -> List.of("default","circle","square","diamond","hexagon");
+            case "parent_line_style","child_line_style" -> List.of("default","dashed","solid");
+            case "shape" -> List.of("default","circle","square","diamond","hexagon","pentagon","triangle");
             case "section" -> List.of("north","northeast","east","southeast","south","southwest","west","northwest");
+            case "modifier" -> List.of("","mastery:native_spell","mastery:tree");
             case "visibility" -> List.of("available","always","discovered","invested","hidden");
             case "fill_direction" -> List.of("default","vertical","horizontal");
             case "operation" -> List.of("add_value","add_multiplied_base","add_multiplied_total");
-            case "modifier" -> List.of("","mastery:native_spell");
             case "key" -> List.of("active_capacity","modifier_slots");
             case "event" -> List.of("damage","kill","block","block_break","craft","smelt","brew","consume","travel","advancement");
             case "slot" -> List.of("mainhand","offhand","hand","head","chest","legs","feet","armor","body","any");
             case "scale" -> List.of("none","damage","distance","amount");
-            case "type" -> path.contains("effects")||kind.equals("effects")?List.of("mastery:attribute","mastery:bonus","mastery:spell_modifier","mastery:unlock_spell","mastery:unlock_context","mastery:on_usage","mastery:trigger","mastery:crafting_attribute","mastery:crafting_food","mastery:crafting_potion","mastery:placed_comfort"):
+            case "type" -> path.contains("effects")||kind.equals("effects")?List.of("mastery:keyword_modifier","mastery:attribute","mastery:experience_gain","mastery:bonus","mastery:spell_modifier","mastery:unlock_spell","mastery:unlock_context","mastery:on_usage","mastery:trigger","mastery:crafting_attribute","mastery:crafting_food","mastery:crafting_potion","mastery:placed_comfort"):
                     path.contains("requirements")||path.contains("condition")||kind.equals("requirements")?List.of("mastery:tree_level","mastery:node_rank","mastery:world_tier","mastery:advancement","mastery:book_unlocked","mastery:condition"):
                     List.of("passive","active","modifier","synergy","keystone","capstone","utility");
             default -> List.of();
@@ -130,6 +148,12 @@ public final class EditorSchema {
     }
     public static String hint(String key) {
         return switch(key) {
+            case "starting_points" -> "Add a specialization and starting point amount. These are granted once when the player chooses this class.";
+            case "starting_skills" -> "Add pre-unlocked node IDs and ranks, including their required parents.";
+            case "starting_inventory" -> "Native item stacks with id, count, and optional data components. Existing inventory is preserved.";
+            case "attributes" -> "Attribute modifiers active while this class is selected. Starter rewards are not repeated on reconnect.";
+            case "root_tree" -> "Make this node an independent tree root, retaining its purchase cost and prerequisites. Descendants use the new point currency.";
+            case "xp_attribute" -> "Optional registered multiplier attribute for XP earned by this tree. Empty uses the bundled per-tree attribute when available.";
             case "icon" -> "Choose any loaded PNG resource, registered item, or native spell icon. Textures from resource packs and all namespaces are included.";
             case "costs" -> "Nested AND/OR purchase costs: specialization points, vanilla experience points, and inventory items. Reset inherits parent costs or the legacy point cost.";
             case "cost_depth_percent","depth_percent" -> "Additional cost fraction per graph depth, rounded up. 0.1 adds 10% per depth; leaf depth_percent overrides the inherited value.";
@@ -139,23 +163,43 @@ public final class EditorSchema {
             case "point_every" -> "Levels between point awards. Use 5 for one award every five levels.";
             case "charge" -> "Extra hold time and changes to the existing native spell.";
             case "modifier_slots" -> "Base slots plus growth per spell level, limited by the maximum.";
-            case "hold_delay_ms" -> "Milliseconds held before shaking, fill, and dings begin. Default: 500. The fill then takes one second.";
-            case "appearance" -> "Node shape and optional name label. Default nodes are circles showing only an icon.";
+            case "hold_delay_ms" -> "Milliseconds held before shaking, fill, and dings begin. Default: 100. The fill then takes one second.";
+            case "connections" -> "Independent prerequisite and branch line styles.";
+            case "parent_line_style" -> "Incoming cross-tree prerequisites. Default: dashed.";
+            case "child_line_style" -> "Outgoing branch connections, including promoted-root children. Default: solid.";
+            case "spell" -> "Native spell ID. For modifier nodes, this selects the spell being modified.";
+            case "appearance" -> "Node shape and optional name label. Defaults: pentagon roots, circle passives, square actives, triangle modifiers.";
             case "show_name" -> "Show a name beneath the node. Hover tooltips always include the name.";
             case "theme" -> "External node outlines and connections. Internal borders keep their node type.";
             case "unlock" -> "Hold-to-level fill direction and sounds. Default inherits the parent setting.";
+            case "modifier" -> "mastery:native_spell equips to a spell. mastery:tree applies across its owning tree without spell slots, using the inherited damage filter.";
+            case "inherit_subtrees" -> "Tree modifiers also affect skills in descendant trees. Enabled by default.";
+            case "skill_damage_xp" -> "XP per damage dealt by an unlocked skill in this tree, regardless of damage type. Zero disables automatic skill credit. Fallback when normal damage XP sources do not credit this tree.";
+            case "damage_filter" -> "Damage required for tree modifiers: alternatives within a field, all populated fields must match.";
+            case "decay_delay" -> "Ticks without reapplication before the first stack loss. Reapplying resets this delay.";
+            case "decay_interval" -> "Ticks between later stack losses.";
+            case "decay_stacks" -> "Stacks lost each decay step; 0 disables decay.";
+            case "stacks_percent","damage_percent","duration_percent" -> "Additive percentage bonus per rank; 0.25 means +25%. Flat bonuses apply first.";
+            case "root_scale" -> "Extra size multiplier for tree roots, including promoted roots. Data default: 1.3 (30% larger).";
+            case "scale" -> "Node size multiplier, including its icon and hit area.";
+            case "spell_levels_per_stage" -> "Native spell levels added per completed held stage above the modified base level. Inherits the data default of 1; set 0 to disable level growth.";
+            case "extra_charges" -> "Additional Tempo Not Time spell charges per enabled rank. Modifier nodes must be assigned to the spell. No effect without Tempo installed.";
             case "levels_per_rank" -> "Additional native spell levels for each purchased rank after the first.";
             case "max_rank" -> "Maximum number of purchases of this node.";
             case "book_token" -> "Consume a matching Skill Book to reveal this branch.";
-            case "shape" -> "Node outline: circle, square, diamond, or hexagon.";
+            case "shape" -> "Node outline: circle, square, diamond, hexagon, pentagon, or triangle.";
             case "section" -> "Initial placement; growth points away from the map center.";
             case "gradient" -> "0 creates a sharp boundary; 1 blends across the whole border.";
             case "ticks_per_level","instant_base_ticks","burst_interval_ticks" -> "Duration in game ticks. 20 ticks = 1 second.";
             case "contexts" -> "Legacy combat classifications; spell sets now follow the selected hotbar position.";
             case "chance" -> "0 to 1 probability: 0.25 means 25%. Trigger and crafting rolls also add mastery:proc_chance; action chances are independent.";
             case "cooldown" -> "Minimum game ticks between successful uses of this trigger. 20 ticks = 1 second.";
-            case "conditions" -> "Every condition must pass. Health can use raw points or a fraction of maximum health.";
-            case "actions","tick_actions","threshold_actions" -> "Actions run in list order. Choose a target, then configure the action; nested conditions restrict it further.";
+            case "categories" -> "Match any selected category: melee, ranged, magic, physical, elemental. Other populated damage filters must also match.";
+            case "elements" -> "Match any selected defined damage type or Iron's school. Includes elemental types and physical types such as slashing.";
+            case "damage_types" -> "Match any selected native Minecraft damage type ID from the actual hit.";
+            case "damage_tags" -> "Match any selected native damage-type tag. Entries within a list are alternatives; populated lists must all match.";
+            case "conditions" -> "Every condition must pass. Damage checks filter the triggering hit; health uses points or a fraction of maximum health.";
+            case "actions","tick_actions","threshold_actions","stacks_lost_actions","all_stacks_lost_actions" -> "Actions run in list order. Choose a target, then configure the action; nested conditions restrict it further.";
             case "target" -> "Self is the skill owner. Target is the combat counterpart or keyword bearer. Nearby selects around its center; aim follows the owner look direction.";
             case "unit" -> "points uses health points (2 = one heart). fraction uses 0 to 1 (0.25 = 25% of maximum).";
             case "threshold" -> "Reaching this number of stacks runs the keyword's threshold actions.";

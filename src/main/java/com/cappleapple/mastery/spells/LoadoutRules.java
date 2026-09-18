@@ -11,7 +11,7 @@ public final class LoadoutRules {
     }
     public static String validate(Map<String,List<String>> loadouts,String context,int slot,String spell,
                                   int capacity,boolean owned,boolean allowed) {
-        if (slot < 0 || slot >= SLOTS) return "Invalid spell slot";
+        if (slot < 0 || slot >= BindingSlots.limit(context)) return "Invalid spell slot";
         if (spell.isBlank()) return "";
         if(slot>=Math.max(0,capacity))return "No spell slot available";
         if (!owned) return "Spell has not been unlocked";

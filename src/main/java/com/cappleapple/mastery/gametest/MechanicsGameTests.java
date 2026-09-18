@@ -44,6 +44,42 @@ public final class MechanicsGameTests {
     }
 
     @GameTest(templateNamespace="minecraft", template="bastion/mobs/empty")
+    public static void damageFiltersUseAcceptedPortionsAndPreserveAttackOrigin(GameTestHelper helper) {
+        var before=MasteryRuntime.definitions();var owner=MasteryTestPlayers.createCombat(helper);
+        var target=helper.spawn(EntityType.COW,new BlockPos(1,2,1));target.setNoAi(true);
+        try {
+            var fire=markTrigger("hit","mastery:fire_marker");
+            fire.add("conditions",JsonParser.parseString("[{\"type\":\"damage\",\"elements\":[\"mastery:fire\"],\"categories\":[\"melee\"]}]"));
+            var slash=markTrigger("hit","mastery:slash_marker");slash.add("conditions",JsonParser.parseString("[{\"type\":\"damage\",\"elements\":[\"mastery:slashing\"]}]"));
+            var ranged=markTrigger("hit","mastery:ranged_marker");ranged.add("conditions",JsonParser.parseString("[{\"type\":\"damage\",\"categories\":[\"ranged\"]}]"));
+            var magic=markTrigger("hurt","mastery:magic_marker");magic.add("conditions",JsonParser.parseString("[{\"type\":\"damage\",\"categories\":[\"magic\"]}]"));
+            install(owner,Map.of("mastery:fire_trigger",fire,"mastery:slash_trigger",slash,"mastery:ranged_trigger",ranged,"mastery:magic_trigger",magic),
+                    Map.of("mastery:fire_marker",marker(),"mastery:slash_marker",marker(),"mastery:ranged_marker",marker(),"mastery:magic_marker",marker()));
+            owner.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_SWORD));
+            owner.getAttribute(BuiltInRegistries.ATTRIBUTE.getHolder(ResourceLocation.parse("mastery:fire_weapon_damage")).orElseThrow()).setBaseValue(.2);
+            target.hurt(owner.damageSources().playerAttack(owner),2);
+            // Queued matching uses impact facts even after equipment changes.
+            owner.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,net.minecraft.world.item.ItemStack.EMPTY);MechanicsRuntime.tick();
+            helper.assertTrue(MechanicsRuntime.stacks(owner,"mastery:fire_marker")==1,"Mixed melee fire hit did not proc exactly once");
+            helper.assertTrue(MechanicsRuntime.stacks(owner,"mastery:slash_marker")==1,"Default sword slashing type was not captured");
+            helper.assertTrue(MechanicsRuntime.stacks(owner,"mastery:ranged_marker")==0,"Melee incorrectly matched ranged");
+            java.util.function.Consumer<net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent> immunity=event->{if(event.getEntity()==target&&event.getSource().is(io.redspace.ironsspellbooks.api.registry.SchoolRegistry.FIRE.get().getDamageType()))event.setCanceled(true);};
+            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(immunity);
+            try{target.invulnerableTime=0;target.hurt(owner.damageSources().playerAttack(owner),2);}finally{net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(immunity);}
+            MechanicsRuntime.tick();
+            helper.assertTrue(MechanicsRuntime.stacks(owner,"mastery:fire_marker")==1,"Immune fire portion incorrectly matched");
+            owner.hurt(owner.damageSources().magic(),2);MechanicsRuntime.tick();
+            helper.assertTrue(MechanicsRuntime.stacks(owner,"mastery:magic_marker")==1,"Source-free magic hurt could not match damage conditions");
+            var arrow=new net.minecraft.world.entity.projectile.Arrow(helper.getLevel(),owner,new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ARROW),new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BOW));
+            var context=DamageContexts.capture(owner.damageSources().arrow(arrow,owner));
+            helper.assertTrue(context.categories().contains("ranged")&&context.damageTags().contains("minecraft:is_projectile"),"Projectile delivery and native tag not captured");
+            target.invulnerableTime=0;target.hurt(owner.damageSources().arrow(arrow,owner),1);MechanicsRuntime.tick();
+            helper.assertTrue(MechanicsRuntime.stacks(owner,"mastery:ranged_marker")==1,"Ranged attack did not fire its filtered hit trigger");
+            helper.succeed();
+        }finally{owner.discard();target.discard();MasteryRuntime.install(before);}
+    }
+
+    @GameTest(templateNamespace="minecraft", template="bastion/mobs/empty")
     public static void successfulHitThresholdChanceCooldownAndRecursion(GameTestHelper helper) {
         var before = MasteryRuntime.definitions(); var owner = MasteryTestPlayers.createCombat(helper);
         var target = helper.spawn(EntityType.COW, new BlockPos(1, 2, 1)); target.setNoAi(true);
@@ -81,8 +117,9 @@ public final class MechanicsGameTests {
         var target = helper.spawn(EntityType.COW, new BlockPos(1, 2, 1)); target.setNoAi(true);
         try {
             var hurt = markTrigger("hurt", "mastery:test_hurt");
+            var kill=markTrigger("kill","mastery:test_kill");kill.add("conditions",JsonParser.parseString("[{\"type\":\"damage\",\"categories\":[\"melee\"],\"damage_types\":[\"minecraft:player_attack\"]}]"));
             hurt.add("conditions", JsonParser.parseString("[{\"type\":\"health\",\"target\":\"self\",\"unit\":\"points\",\"max\":15}]"));
-            install(owner, Map.of("mastery:test_hurt", hurt, "mastery:test_kill", markTrigger("kill", "mastery:test_kill")),
+            install(owner, Map.of("mastery:test_hurt", hurt, "mastery:test_kill", kill),
                     Map.of("mastery:test_hurt", marker(), "mastery:test_kill", marker()));
             owner.hurt(owner.damageSources().mobAttack(target), 5); MechanicsRuntime.tick();
             helper.assertTrue(MechanicsRuntime.stacks(owner, "mastery:test_hurt") == 1, "Being-hit threshold did not use the player's post-hit health");
@@ -97,7 +134,7 @@ public final class MechanicsGameTests {
         var before = MasteryRuntime.definitions(); var owner = MasteryTestPlayers.createCombat(helper);
         var target = helper.spawn(EntityType.COW, new BlockPos(1, 2, 1)); target.setNoAi(true);
         try {
-            install(owner, Map.of("mastery:test_death", json("{\"event\":\"death\",\"actions\":[{\"type\":\"keyword\",\"keyword\":\"mastery:test_marker\"}]}")),
+            install(owner, Map.of("mastery:test_death", json("{\"event\":\"death\",\"conditions\":[{\"type\":\"damage\",\"categories\":[\"melee\"]}],\"actions\":[{\"type\":\"keyword\",\"keyword\":\"mastery:test_marker\"}]}")),
                     Map.of("mastery:test_marker", marker()));
             owner.hurt(owner.damageSources().mobAttack(target), 1000); MechanicsRuntime.tick();
             helper.assertTrue(MechanicsRuntime.stacks(target, "mastery:test_marker") == 1, "Death proc was discarded because its owner died");

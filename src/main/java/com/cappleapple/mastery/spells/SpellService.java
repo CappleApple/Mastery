@@ -29,16 +29,19 @@ public final class SpellService {
     private static final Map<UUID,String> CONTEXTS=new HashMap<>();
     private static final Map<UUID,Integer> CAPACITIES=new HashMap<>();
     private static final Map<UUID,Boolean> BUSY=new HashMap<>();
+    private static final Map<UUID,JsonObject> CHARGE_STATS=new HashMap<>();
     private static boolean initialized;
     private SpellService() {}
     public static void initialize() {
         if(initialized) return; initialized=true;
         SpellModifierRegistry.register("mastery:native_spell",(player,spell,rank,data,result) -> {
+            result.addCharges((int)Math.clamp(number(data,"extra_charges",0)*rank,0,10000));
             result.addLevels((int)Math.clamp(number(data,"spell_level",0)*rank,-255,255));
             result.multiplyMana(Math.pow(number(data,"mana_multiplier",1),rank));
             result.multiplyCooldown(Math.pow(number(data,"cooldown_multiplier",1),rank));
             result.multiplyCastTime(Math.pow(number(data,"cast_time_multiplier",1),rank));
         });
+        com.cappleapple.mastery.integration.TempoChargeIntegration.initialize();
         NeoForge.EVENT_BUS.register(IronSpellsIntegration.class);NeoForge.EVENT_BUS.register(ChargeService.class);
     }
     public static String context(Player player) {
@@ -66,16 +69,16 @@ public final class SpellService {
     }
     public static boolean owned(ServerPlayer player,String spell) {
         if(!MasteryRuntime.definitions().spells().containsKey(spell)) return false;
-        return MasteryRuntime.definitions().nodes().values().stream().anyMatch(node -> node.modifier().isBlank()
+        return MasteryRuntime.definitions().nodes().values().stream().anyMatch(node -> !node.spellModifier()
                 &&(node.spell().equals(spell)||grants(node,"mastery:unlock_spell","spell",spell))&&EffectService.active(player,node));
     }
     public static boolean unlocked(ServerPlayer player,String spell) {
         if(!MasteryRuntime.definitions().spells().containsKey(spell)) return false;
-        return MasteryRuntime.definitions().nodes().values().stream().anyMatch(node -> node.modifier().isBlank()
+        return MasteryRuntime.definitions().nodes().values().stream().anyMatch(node -> !node.spellModifier()
                 &&(node.spell().equals(spell)||grants(node,"mastery:unlock_spell","spell",spell))&&EffectService.eligibleRank(player,node)>0);
     }
     public static String toggleNode(ServerPlayer player,NodeDefinition node,boolean enabled) {
-        if(!node.modifier().isBlank()) {
+        if(node.spellModifier()) {
             var targets=MasteryRuntime.definitions().spells().keySet().stream().sorted().filter(id->related(node,id,new HashSet<>())).toList();
             if(targets.isEmpty())return "No target spell for this modifier";
             if(enabled)for(String spell:targets) {
@@ -116,13 +119,13 @@ public final class SpellService {
         interrupt(player,"loadout changed"); progress.bind(context,slot,spell); MasteryRuntime.sync(player); return "";
     }
     public static String grantingNode(ServerPlayer player,String spell) {
-        return MasteryRuntime.definitions().nodes().values().stream().filter(n->n.modifier().isBlank()&&(n.spell().equals(spell)||grants(n,"mastery:unlock_spell","spell",spell)))
+        return MasteryRuntime.definitions().nodes().values().stream().filter(n->!n.spellModifier()&&(n.spell().equals(spell)||grants(n,"mastery:unlock_spell","spell",spell)))
                 .filter(n->EffectService.eligibleRank(player,n)>0).sorted(Comparator.<NodeDefinition>comparingInt(n->EffectService.eligibleRank(player,n)).reversed().thenComparing(NodeDefinition::id))
                 .map(NodeDefinition::id).findFirst().orElse("");
     }
     /** Highest active granting-node rank supplies charge progression for singular and array-based spell grants. */
     public static int grantingRank(ServerPlayer player,String spell) {
-        return MasteryRuntime.definitions().nodes().values().stream().filter(n->n.modifier().isBlank()&&(n.spell().equals(spell)||grants(n,"mastery:unlock_spell","spell",spell)))
+        return MasteryRuntime.definitions().nodes().values().stream().filter(n->!n.spellModifier()&&(n.spell().equals(spell)||grants(n,"mastery:unlock_spell","spell",spell)))
                 .mapToInt(n->EffectService.effectiveRank(player,n)).max().orElse(1);
     }
     /** Array grants may upgrade the native starting level without changing legacy charge-only node ranks. */
@@ -131,7 +134,7 @@ public final class SpellService {
         if(definition==null)return 1;
         int level=definition.level();
         for(var node:MasteryRuntime.definitions().nodes().values()) {
-            int rank=EffectService.effectiveRank(player,node);if(rank<=0||!node.modifier().isBlank())continue;
+            int rank=EffectService.effectiveRank(player,node);if(rank<=0||node.spellModifier())continue;
             for(var raw:node.effects()) {
                 var effect=resolve(raw);
                 if(effect!=null&&text(effect,"type","").equals("mastery:unlock_spell")&&text(effect,"spell","").equals(spell))
@@ -139,6 +142,16 @@ public final class SpellService {
             }
         }
         return level;
+    }
+    /** Native effective level, evaluated once for a prepared spell (including affinity and enabled modifiers). */
+    public static int effectiveLevel(ServerPlayer player,String spell) {
+        return Math.max(1,SpellRegistry.getSpell(spell).getLevelFor(baseLevel(player,spell),player));
+    }
+    public static List<io.redspace.ironsspellbooks.api.spells.SpellData> preparedSpells(ServerPlayer player) {
+        String context=context(player);
+        return MasteryRuntime.progress(player).loadouts().getOrDefault(context,List.of()).stream()
+                .limit(Math.min(capacity(player),BindingSlots.limit(context))).filter(id->owned(player,id))
+                .map(id->new io.redspace.ironsspellbooks.api.spells.SpellData(SpellRegistry.getSpell(id),effectiveLevel(player,id))).toList();
     }
     private static List<JsonObject> modifierEffects(NodeDefinition node,String spell) {
         return node.effects().stream().map(SpellService::resolve).filter(Objects::nonNull)
@@ -153,7 +166,8 @@ public final class SpellService {
         // All active passive upgrades and selected modifier upgrades contribute to slot growth.
         for(var node:MasteryRuntime.definitions().nodes().values()) {
             if(!EffectService.active(player,node))continue;
-            if(!node.modifier().isBlank()&&(!MasteryRuntime.progress(player).modifiers(spell.id()).contains(node.id())||!related(node,spell.id(),new HashSet<>())))continue;
+            if(node.treeModifier()&&!com.cappleapple.mastery.mechanics.TreeModifiers.matches(node,com.cappleapple.mastery.mechanics.DamageContexts.capture(SpellRegistry.getSpell(spell.id()).getDamageSource(player))))continue;
+            if(node.spellModifier()&&(!MasteryRuntime.progress(player).modifiers(spell.id()).contains(node.id())||!related(node,spell.id(),new HashSet<>())))continue;
             for(var effect:modifierEffects(node,spell.id()))if(effect.has("spell_level"))
                 level=(int)Math.clamp((long)level+(long)number(effect,"spell_level",0)*EffectService.effectiveRank(player,node),1,Integer.MAX_VALUE);
         }
@@ -165,7 +179,7 @@ public final class SpellService {
     public static String setModifier(ServerPlayer player,String spell,String nodeId,boolean enabled) {
         var definitions=MasteryRuntime.definitions(); var progress=MasteryRuntime.progress(player);
         var definition=definitions.spells().get(spell); var node=definitions.nodes().get(nodeId);
-        if(definition==null||node==null||node.modifier().isBlank()) return "Unknown spell or modifier";
+        if(definition==null||node==null||!node.spellModifier()) return "Unknown spell or modifier";
         Set<String> modifiers=progress.modifiers(spell);
         if(enabled) {
             String error=LoadoutRules.modifier(modifiers.size(),modifierLimit(player,definition),EffectService.eligibleRank(player,node)>0,
@@ -184,19 +198,30 @@ public final class SpellService {
         return node.dependencyLeaves().stream().map(dep -> MasteryRuntime.definitions().nodes().get(dep.node())).filter(Objects::nonNull)
                 .anyMatch(parent -> related(parent,spell,visited));
     }
+    /** The same deterministic slot budget is used for native spell bonuses and combat trigger attribution. */
+    public static Set<String> activeModifiers(ServerPlayer player,String spell) {
+        var definition=MasteryRuntime.definitions().spells().get(spell);
+        if(definition==null||!owned(player,spell))return Set.of();
+        var result=new LinkedHashSet<String>();int limit=modifierLimit(player,definition);
+        for(String id:new TreeSet<>(MasteryRuntime.progress(player).modifiers(spell))) {
+            var node=MasteryRuntime.definitions().nodes().get(id);
+            if(node==null||!node.spellModifier()||!EffectService.active(player,node)||!related(node,spell,new HashSet<>()))continue;
+            if(result.size()>=limit)break;
+            result.add(id);
+        }
+        return Set.copyOf(result);
+    }
     public static SpellModifiers modifiers(ServerPlayer player,String spell) {
         SpellModifiers result=new SpellModifiers(); var definition=MasteryRuntime.definitions().spells().get(spell);
         if(definition==null||!owned(player,spell)) return result;
         var passiveHandler=SpellModifierRegistry.get("mastery:native_spell");
         if(passiveHandler!=null)for(var node:MasteryRuntime.definitions().nodes().values().stream().sorted(Comparator.comparing(NodeDefinition::id)).toList()) {
-            if(!node.modifier().isBlank()||!EffectService.active(player,node))continue;
+            if(node.spellModifier()||!EffectService.active(player,node))continue;
+            if(node.treeModifier()&&!com.cappleapple.mastery.mechanics.TreeModifiers.matches(node,com.cappleapple.mastery.mechanics.DamageContexts.capture(SpellRegistry.getSpell(spell).getDamageSource(player))))continue;
             for(var effect:modifierEffects(node,spell))passiveHandler.apply(player,spell,EffectService.effectiveRank(player,node),effect,result);
         }
-        int count=0;
-        for(String id:new TreeSet<>(MasteryRuntime.progress(player).modifiers(spell))) {
+        for(String id:new TreeSet<>(activeModifiers(player,spell))) {
             var node=MasteryRuntime.definitions().nodes().get(id);
-            if(node==null||!EffectService.active(player,node)||!related(node,spell,new HashSet<>())) continue;
-            if(count++>=modifierLimit(player,definition)) break;
             var handler=SpellModifierRegistry.get(node.modifier());if(handler==null)continue;
             var effects=modifierEffects(node,spell);
             if(effects.isEmpty())handler.apply(player,spell,EffectService.effectiveRank(player,node),new JsonObject(),result);
@@ -208,6 +233,7 @@ public final class SpellService {
         if(slot<0||slot>=capacity(player)||!player.isAlive()||player.isSpectator()) return "Cannot use this spell slot";
         reconcile(player); String context=context(player);
         if(context.isBlank()) return "No matching spell context";
+        if(slot>=BindingSlots.limit(context))return "Invalid spell slot";
         String id=BindingSlots.get(MasteryRuntime.progress(player).loadouts(),context,slot);
         var definition=MasteryRuntime.definitions().spells().get(id);
         if(definition==null||!owned(player,id)) return "No unlocked spell prepared in this slot";
@@ -244,6 +270,10 @@ public final class SpellService {
             int capacity=capacity(player); Integer previousCapacity=CAPACITIES.put(player.getUUID(),capacity);
             if(reconcile(player)||previousCapacity==null||previousCapacity!=capacity) MasteryRuntime.sync(player);
         }
+        if(player.tickCount%10==0) {
+            var charges=com.cappleapple.mastery.integration.TempoSpellStats.charges(player);
+            if(!charges.equals(CHARGE_STATS.put(player.getUUID(),charges)))MasteryRuntime.sync(player);
+        }
         var magic=MagicData.getPlayerMagicData(player);
         boolean busy=magic.isCasting()||magic.getPlayerCooldowns().hasCooldownsActive(); Boolean before=BUSY.put(player.getUUID(),busy);
         if((busy&&player.tickCount%5==0)||before==null||busy!=before) MasteryRuntime.sync(player);
@@ -259,7 +289,7 @@ public final class SpellService {
         MasteryRuntime.sync(player);
     }
     public static void forget(ServerPlayer player) {
-        interrupt(player,"logout"); CONTEXTS.remove(player.getUUID()); CAPACITIES.remove(player.getUUID()); BUSY.remove(player.getUUID());
+        interrupt(player,"logout"); CONTEXTS.remove(player.getUUID()); CAPACITIES.remove(player.getUUID()); BUSY.remove(player.getUUID()); CHARGE_STATS.remove(player.getUUID());
     }
     public static boolean reconcile(ServerPlayer player) {
         var progress=MasteryRuntime.progress(player); var definitions=MasteryRuntime.definitions(); int count=0,budget=capacity(player); boolean changed=false;
@@ -267,6 +297,7 @@ public final class SpellService {
             count=0;Map<String,Integer> perTree=new HashMap<>();
             for(String context:new TreeSet<>(BindingSlots.modeLoadouts(progress.loadouts(),mode).keySet())) {
                 var slots=progress.loadout(context); Set<String> unique=new HashSet<>();
+                if(slots.size()>BindingSlots.limit(context)){slots.subList(BindingSlots.limit(context),slots.size()).clear();changed=true;}
                 for(int index=0;index<slots.size();index++) {
                     String id=slots.get(index);if(id.isBlank())continue;
                     var spell=definitions.spells().get(id);
@@ -281,7 +312,7 @@ public final class SpellService {
             var spell=definitions.spells().get(entry.getKey()); int used=0;
             for(String nodeId:new TreeSet<>(entry.getValue())) {
                 var node=definitions.nodes().get(nodeId);
-                if(spell==null||node==null||node.modifier().isBlank()||EffectService.eligibleRank(player,node)==0||!related(node,entry.getKey(),new HashSet<>())
+                if(spell==null||node==null||!node.spellModifier()||EffectService.eligibleRank(player,node)==0||!related(node,entry.getKey(),new HashSet<>())
                         ||used>=modifierLimit(player,spell)) { entry.getValue().remove(nodeId); changed=true; }
                 else used++;
             }
@@ -293,6 +324,23 @@ public final class SpellService {
         long time=player.level().getGameTime(); result.addProperty("game_time",time);
         JsonObject limits=new JsonObject();MasteryRuntime.definitions().spells().forEach((id,spell)->limits.addProperty(id,modifierLimit(player,spell)));result.add("modifier_limits",limits);
         JsonArray available=new JsonArray(); MasteryRuntime.definitions().spells().keySet().stream().filter(id -> owned(player,id)).sorted().forEach(available::add);
+        var levels=new JsonObject();for(var value:available){String id=value.getAsString();levels.addProperty(id,effectiveLevel(player,id));}result.add("spell_levels",levels);
+        var stats=new JsonObject();var equipped=new JsonObject();var eligible=new JsonArray();
+        for(var node:MasteryRuntime.definitions().nodes().values())if(node.spellModifier()&&MasteryRuntime.progress(player).rank(node.id())==0)
+            for(var value:available) {
+                String id=value.getAsString();
+                if(related(node,id,new HashSet<>())&&MasteryRuntime.progress(player).modifiers(id).size()<limits.get(id).getAsInt()) {eligible.add(node.id());break;}
+            }
+        for(var value:available) {
+            String id=value.getAsString();var spell=SpellRegistry.getSpell(id);int level=levels.get(id).getAsInt();var modifiers=modifiers(player,id);
+            var stat=new JsonObject();
+            stat.addProperty("mana",SpellModifiers.scale(spell.getManaCost(level),modifiers.manaMultiplier()));
+            stat.addProperty("cast_ticks",spell.getEffectiveCastTime(level,player));
+            stat.addProperty("cooldown_ticks",com.cappleapple.mastery.integration.TempoSpellStats.cooldown(spell,SpellModifiers.scale(io.redspace.ironsspellbooks.capabilities.magic.MagicManager.getEffectiveSpellCooldown(spell,player,io.redspace.ironsspellbooks.api.spells.CastSource.SPELLBOOK),modifiers.cooldownMultiplier())));
+            stats.add(id,stat);var nodes=new JsonArray();activeModifiers(player,id).stream().sorted().forEach(nodes::add);equipped.add(id,nodes);
+        }
+        result.add("spell_charges",com.cappleapple.mastery.integration.TempoSpellStats.charges(player));
+        result.add("spell_stats",stats);result.add("equipped_modifiers",equipped);result.add("available_modifier_nodes",eligible);
         result.add("available",available); JsonObject cooldowns=new JsonObject(); var magic=MagicData.getPlayerMagicData(player);
         magic.getPlayerCooldowns().getSpellCooldowns().forEach((id,cooldown) -> cooldowns.addProperty(id,time+cooldown.getCooldownRemaining()));
         result.add("cooldowns",cooldowns); JsonObject casting=new JsonObject();

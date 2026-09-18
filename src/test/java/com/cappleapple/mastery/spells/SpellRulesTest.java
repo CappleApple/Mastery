@@ -21,6 +21,13 @@ class SpellRulesTest {
         assertFalse(LoadoutRules.modifier(2,2,true,true,false).isEmpty());
         assertEquals("",LoadoutRules.modifier(2,2,true,true,true));
     }
+    @Test void additionalChargesComposeWithoutChangingSpellLevels() {
+        var result=new SpellModifiers();result.addCharges(2);result.addCharges(3);
+        assertEquals(5,result.extraCharges());assertEquals(12,result.withCharges(7));assertEquals(0,result.levels());
+        result.addCharges(-1);assertEquals(5,result.extraCharges());
+        result.addCharges(Integer.MAX_VALUE);assertEquals(10000,result.extraCharges());
+        assertEquals(Integer.MAX_VALUE,result.withCharges(Integer.MAX_VALUE));
+    }
     @Test void nativeModifiersComposeAndRoundCostsUp() {
         var result=new SpellModifiers();
         result.addLevels(2); result.addLevels(1);

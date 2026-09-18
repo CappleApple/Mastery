@@ -1,8 +1,8 @@
 # Datapack reference
 
-Place definitions under `data/<namespace>/mastery/<kind>/<path>.json`. The namespace and path form the ID. Higher-priority packs replace matching resources. Editor overrides use the parallel `data/<namespace>/masteryedits/<kind>/<path>.json` path and take precedence over base `mastery` definitions. Supported directories are `trees`, `nodes`, `synergies`, `spells`, `contexts`, `xp_sources`, `requirements`, `effects`, `settings`, `elements`, `mob_types`, `weapon_types`, `triggers`, `keywords`, and the legacy organizational `groups` schema.
+Place definitions under `data/<namespace>/mastery/<kind>/<path>.json`. The namespace and path form the ID. Higher-priority packs replace matching resources. Editor overrides use the parallel `data/<namespace>/masteryedits/<kind>/<path>.json` path and take precedence over base `mastery` definitions. Supported directories are `classes`, `trees`, `nodes`, `synergies`, `spells`, `contexts`, `xp_sources`, `requirements`, `effects`, `settings`, `elements`, `mob_types`, `weapon_types`, `triggers`, `keywords`, and the legacy organizational `groups` schema.
 
-The [demo generator](../scripts/generate_demo.py) produces the base 21 trees and nine bindings to existing Iron's Spells. Run `python scripts/generate_mechanics_examples.py` afterward to add the 29 mechanics example nodes without overwriting existing definitions. `.\gradlew.bat demoDatapack` creates `build/distributions/mastery-demo-1.2.0.zip`, an editable standalone copy for a world's `datapacks` folder. Minecraft 1.21.1 uses datapack format 48.
+The [demo generator](../scripts/generate_demo.py) produces the 21 base trees, the promoted Flame Blade tree, and nine bindings to existing Iron's Spells. Run `python scripts/generate_mechanics_examples.py` afterward to add the 29 mechanics example nodes without overwriting existing definitions. `.\gradlew.bat demoDatapack` creates `build/distributions/mastery-demo-1.3.0.zip`, an editable standalone copy for a world's `datapacks` folder. Minecraft 1.21.1 uses datapack format 48.
 
 Operators can export the accepted merged definitions with `/mastery export`. The resulting ZIP is saved in the calling client's `config/exports/` folder. Original namespaces and resource kinds are preserved; editor overrides become ordinary `mastery` resources, including disabled tombstones. See [exporting a datapack](editor.md#exporting-a-datapack) for naming and scope.
 
@@ -30,12 +30,13 @@ A tree's maximum level is the first level whose cumulative point awards cover th
 
 For nine spendable points, `point_every: 1` and `points_per_award: 2` gives a maximum of level 5; `point_every: 5` and `points_per_award: 1` gives level 45. Milestones and cumulative formulas contribute to the same calculation. Trees with no rank costs, or no level-based point awards, have a maximum of zero unless an explicit node level gate requires a higher cap. An insufficient finite schedule rejects the reload. Formula-driven cap searches support up to 100,000 levels; periodic/milestone schedules use the integer level range.
 
-Every bundled tree gives one point per newly earned level. This is also the loader default. Points belong to their tree. Trees appear after the first point grant and stay visible after spending; they have no category parents.
+Every bundled tree gives one point per newly earned level. This is also the loader default. Points belong to their tree. Ordinary trees appear after the first point grant and stay visible after spending; they have no category parents. A promoted tree appears at its purchased root node and becomes usable when that root is eligible.
 
 | Field | Behavior |
 | --- | --- |
 | `section` | Initial placement and outward growth: `north` (up), `northeast`, `east` (right), `southeast`, `south` (down), `southwest`, `west` (left), or `northwest`; default `south` |
 | `xp_base`, `xp_growth` | Cost from level L to L+1 is `xp_base + xp_growth * L` |
+| `xp_attribute` | Optional registered player attribute used as this tree's earned-XP multiplier; bundled trees have built-in defaults. See [experience modifiers](experience.md). |
 | `point_every` | Levels between periodic awards; default `1`, zero disables periodic awards |
 | `points_per_award` | Points per periodic award; default `1` |
 | `point_milestones` | Optional level array awarding one point, or level-to-count object |
@@ -46,6 +47,12 @@ Formulas support `level`, `+ - * / %`, parentheses, `floor`, `ceil`, `round`, `a
 
 Tier entries also accept `modifier_slots` and `active_capacity`. XP beyond a current level cap is discarded. See [configuration](configuration.md) for the world-tier provider and fallback. Organizational groups remain parseable for tooling but are not shown in the player map.
 
+## Classes and promoted roots
+
+Classes live at `data/<namespace>/mastery/classes/<path>.json`. They define a name, icon, starting tree points, pre-unlocked node ranks, item stacks, and persistent attribute modifiers. The enabled-by-default server selector temporarily places an unclassified player in spectator mode. See [player classes](classes.md) for the schema, saved reward behavior, and config toggle.
+
+A node's optional `root_tree` object creates a separate proficiency and point currency while retaining the node's ID, prerequisites, and initial owning-tree costs. Same-tree descendants automatically join the new branch; an explicit generated tree ID resolves branches with multiple promoted parents. The generated root's XP curve, point rules, tier caps, and `xp_attribute` use the same fields as an ordinary tree. Define XP sources against its generated ID. See [promoted skill roots](roots.md) for authoring, nesting, cost gates, and the bundled Flame Blade example.
+
 ## Inherited settings and tree presentation
 
 The global file is `data/mastery/mastery/settings/defaults.json`. Settings merge from built-ins to global defaults, tree, spell binding, then node. Missing values and `"default"` inherit, including individual nested fields. Editor overrides use `data/mastery/masteryedits/settings/defaults.json`.
@@ -53,23 +60,26 @@ The global file is `data/mastery/mastery/settings/defaults.json`. Settings merge
 ```json
 {
   "appearance": {"shape": "circle", "show_name": false},
+  "connections": {"parent_line_style": "dashed", "child_line_style": "solid"},
   "theme": {"inner_color": "#D3AD5B", "outer_color": "#604522", "gradient": 1},
   "unlock": {
     "fill_direction": "vertical",
     "progress_sound": "minecraft:entity.experience_orb.pickup",
     "complete_sound": "minecraft:block.beacon.power_select",
-    "hold_delay_ms": 500
+    "hold_delay_ms": 100
   },
   "modifier_slots": {"base": 2, "per_level": 1, "max": 64},
   "charge": {"ticks_per_level": 20, "instant_base_ticks": 10, "max_levels": 16, "burst_interval_ticks": 3}
 }
 ```
 
+`connections.parent_line_style` controls incoming synergy and cross-tree prerequisite lines (default `dashed`). `connections.child_line_style` controls outgoing connections within a branch (default `solid`), including children of a promoted root such as Flame Blade. Each accepts `dashed`, `solid`, or `default` to inherit. Prerequisite edges use the destination node's parent style; branch edges use the source node's child style. Styles do not change after purchase. Both fields are available in the visual editor at global, tree, spell, and node scope.
+
 Colors are six-digit RGB hex strings. `gradient` ranges from 0 (sharp midpoint) to 1 (full-width blend). Themes affect outer outlines and connector bands; internal borders retain passive/active/modifier styling. Unpurchased outlines are gray; disabled purchased nodes use dimmed theme colors. Middle-click a purchased node or use its details panel to toggle it without disabling downstream nodes.
 
-`fill_direction` accepts `vertical`, `horizontal`, or `default`. Sound fields accept registered sound IDs, `none`, or `default`. The hold starts silently for `hold_delay_ms` milliseconds (default 500, range 0-60000), rounded up to the next client tick. It then shakes and fills for one second with eight rising-pitch progress sounds. Releasing or dragging during the initial delay produces no unlock feedback. The completion sound plays after the server confirms a rank increase. Tree fields can explicitly retain `default` in the editor.
+`fill_direction` accepts `vertical`, `horizontal`, or `default`. Sound fields accept registered sound IDs, `none`, or `default`. The hold starts silently for `hold_delay_ms` milliseconds (default 100, range 0-60000), rounded up to the next client tick. It then shakes and fills for one second with eight rising-pitch progress sounds. Releasing or dragging during the initial delay produces no unlock feedback. The completion sound plays after the server confirms a rank increase. Tree fields can explicitly retain `default` in the editor.
 
-`appearance.shape` accepts `circle` (default), `square`, `diamond`, or `hexagon`. `appearance.show_name` defaults to `false`; enabling it prints the name below the icon. Each field accepts `"default"` to inherit. The visual editor exposes both fields.
+`appearance.shape` accepts `circle`, `square`, `diamond`, `hexagon`, `pentagon`, or `triangle`. Roots default to pentagons, passives to circles, actives to rounded squares, and modifiers to triangles. The modifier type defaults to spell assignment and consumes modifier slots. Set `modifier: "mastery:tree"` for a tree modifier that activates without a spell slot. Other skill types default to circles; explicit global, tree, spell, or node shapes override those defaults. `appearance.show_name` defaults to `false`; enabling it prints the name below the icon. Each field accepts `"default"` to inherit. `appearance.scale` scales the node and icon; `appearance.root_scale` additionally scales roots, including promoted roots. The bundled data defaults are `1` and `1.3`, making roots 30% larger. Both accept 0.25-4. Hit areas and spacing follow the rendered size. The visual editor exposes these fields.
 
 `effect_context` scopes attribute bonuses to a combat context. The bundled weapon trees use `mastery:one_handed`, `mastery:two_handed`, `mastery:dual_wield`, `mastery:bow`, or `mastery:crossbow`. Empty means any weapon; `"default"` inherits. Individual attribute effects can override this with `context`. Two-handed matching always requires Better Combat's resolved weapon data.
 
@@ -135,7 +145,7 @@ See [spell preparation](spells.md) for native equipment capacity and casting beh
 
 An unlock node uses `spell` without `modifier`. It authorizes preparing the existing spell without requiring native item inscription. Modifier nodes must be purchased and enabled within the binding's modifier limit. `mastery:native_spell` reads `mastery:spell_modifier` effects: `spell_level` adds casting levels per effective rank; each multiplier is raised to that rank. Casting-level bonuses compose with Iron's native level adjustments.
 
-Visual node types are `passive`, `active`, `keystone`, `capstone`, `modifier`, `synergy`, and `utility`. By default, each rank costs `cost` points from its owning tree. An inherited `costs` definition can replace that price with nested skill-point, Minecraft XP, and item costs; see [purchase costs](costs.md). Dependencies can be node ID strings or objects such as `{"node":"mastery:fireball","rank":1}`. Cross-tree dependencies respect the source tree's caps. `exclusions` are symmetric even if only one node lists the other. `level`, `world_tier` and `requirements` gate purchases.
+Node types are `passive`, `active`, `keystone`, `capstone`, `modifier`, `synergy`, and `utility`. By default, each rank costs `cost` points from its owning tree. An inherited `costs` definition can replace that price with nested skill-point, Minecraft XP, and item costs; see [purchase costs](costs.md). Dependencies can be node ID strings or objects such as `{"node":"mastery:fireball","rank":1}`. Cross-tree dependencies respect the source tree's caps. `exclusions` are symmetric even if only one node lists the other. `level`, `world_tier` and `requirements` gate purchases.
 
 `visibility` defaults to `available`; other values are `always`, `discovered`, `invested`, and `hidden`. An available node first appears after its prerequisites, level, world-tier, book, and external requirements are met, regardless of the current point balance. Its first reveal is remembered, so a later unmet requirement can disable its effects without hiding its revealed history. Visibility never reveals an undiscovered tree. Synergies use `mastery/synergies/` or `type: synergy` within `mastery/nodes/` and must reference at least two trees. Each player can move branches and trees; datapacks define placement sections and dependencies, not fixed X/Y coordinates. A dragged root grows outward from the fixed logical map center in its new compass sector. Panning does not change orientation. The **Sectors** button controls boundary-line visibility.
 
@@ -233,6 +243,7 @@ Inline objects and `{"ref":"namespace:path"}` references are accepted in node `r
 | Effect | Fields and behavior |
 | --- | --- |
 | `mastery:attribute` | Existing `attribute` ID, `amount`, and `operation`: `add_value`, `add_multiplied_base`, or `add_multiplied_total` |
+| `mastery:experience_gain` | `amount`, optional `tree`; rank-scaled earned-XP bonus for every tree or one tree. See [experience modifiers](experience.md). |
 | `mastery:bonus` | `key`, `amount`, optional `spell` filter; consumed keys include `active_capacity`, `spell_slots`, `modifier_slots` |
 | `mastery:unlock_spell` | Existing bound `spell` ID, `level` (default 1), `levels_per_rank` (default 0); multiple entries can grant different spells |
 | `mastery:unlock_context` | `context` ID; relevant when that context requires unlocking |
@@ -261,9 +272,11 @@ Contexts under `data/<namespace>/mastery/contexts/` define a `name`, integer `pr
 }
 ```
 
-School XP follows the actual damage source. Mastery matches its damage type against each registered Iron school's damage type and emits that school's ID as `school`. Native spell damage also exposes `spell` when its damage source identifies the originating spell. All nine bundled school XP sources use this classification; casting a spell, holding an item, or ordinary fire damage alone does not award school XP.
+School XP follows the actual damage source. Mastery matches its damage type against each registered Iron school's damage type and emits that school's ID as `school`. Native spell damage also exposes `spell` when its damage source identifies the originating spell. The nine bundled school XP sources use this classification. Unlocked skills also credit their own tree through `skill_damage_xp`, even when their damage school differs. Casting without dealing damage, holding an item, or ordinary fire damage alone does not award school XP.
 
 Other adapters emit `damage`, `kill`, `block`, `block_break`, `craft`, `smelt`, `brew`, `consume`, `travel`, and `advancement`. Integrations can emit events through `MasteryAPI.emitUsage`.
+
+Earned XP composes the global `mastery:experience_gain` attribute, the selected tree attribute, and active `mastery:experience_gain` effects. These modifiers do not multiply direct skill-point grants or administrative XP commands. See [experience modifiers](experience.md) for defaults and the calculation. Locked promoted trees reject XP without consuming one-time source rewards.
 
 `scale` defaults to `none`. Another value selects a numeric event field, such as `damage`, `distance`, or `amount`, which multiplies the source's `amount`; a missing field contributes zero. Optional `points` grants points directly. `once: true` permits one accepted grant per player until reset.
 
@@ -277,7 +290,7 @@ Projectile events preserve their launch weapon/context. Bundled physical weapon 
 
 A higher-priority replacement resource containing `{"disabled":true}` removes that definition from the candidate graph. The normal required fields are unnecessary for a disabled file. Dependent resources must also be disabled or updated: references to removed nodes, trees and spells still fail validation. Keep an override in the original kind directory (`nodes` or `synergies`) even if its node's visual type changes. Editor overrides use `masteryedits` in place of the base `mastery` path.
 
-Reload validates references, ranks, cycles, synergy trees, formula rules, native spell IDs and base levels, registered effects/modifiers, book-token syntax, and context schemas. A rejected candidate leaves the previous valid graph active. Accepted reloads reconcile missing nodes, modifiers, assignments and effects, interrupt Mastery-initiated casts, and synchronize definitions to online players. Routine player-state updates do not resend the graph.
+Reload validates references, ranks, cycles, synergy trees, formula rules, native spell IDs and base levels, registered effects/modifiers, book-token syntax, context schemas, class reward references and item components, promoted root ownership, and registered XP attributes. A rejected candidate leaves the previous valid graph active. Accepted reloads reconcile missing nodes, modifiers, assignments and effects, interrupt Mastery-initiated casts, and synchronize definitions to online players. Routine player-state updates do not resend the graph.
 
 ## Damage, combat scripts, and crafting
 
@@ -285,5 +298,10 @@ Reload validates references, ranks, cycles, synergy trees, formula rules, native
 - [Combat scripts](mechanics.md): triggers, health conditions, action targeting, proc chance, keyword stacks, DOT, and interactions.
 - [Crafting](crafting.md): persisted item attributes, food/potion improvements, placed-block comfort, and optional Needs Not Necessities providers.
 - [Purchase costs](costs.md): nested AND/OR currencies, raw Minecraft XP, items/tags, and depth scaling.
+- [Player classes](classes.md): join selection, starting packages, and class attributes.
+- [Experience modifiers](experience.md): global and per-tree earned-XP multipliers.
+- [Promoted roots](roots.md): independent currencies rooted in existing nodes.
 
 All Mastery definition kinds participate in the same validated reload, world editor, synchronization, and export. Native Minecraft enchantment and damage-type registry JSON uses its own datapack paths and needs the normal datapack lifecycle.
+
+`damage_filter`, `inherit_subtrees`, and `skill_damage_xp` also inherit through global, tree, spell, and node settings. Tree modifiers use the first two; automatic XP for an unlocked skill uses `skill_damage_xp` (default 1 XP per damage; zero disables). See [tree modifiers](mechanics.md#tree-modifiers) and [skill XP](experience.md#damage-from-a-trees-skills). Attribute effects may set `display_name` to override their bonus label without changing their numeric calculation.

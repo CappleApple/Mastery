@@ -593,7 +593,7 @@ public final class ClientSmoke {
         Object book = books.get(bookId); require(book != null, "optional Patchouli guide registered");
         Object contents = book.getClass().getMethod("getContents").invoke(book);
         require(!(boolean)contents.getClass().getMethod("isErrored").invoke(contents), "Patchouli guide has no content errors");
-        require(((Map<?, ?>)contents.getClass().getField("entries").get(contents)).size() == 8, "all guide entries loaded");
+        require(((Map<?, ?>)contents.getClass().getField("entries").get(contents)).size() == 11, "all player guide entries loaded");
         REPORT.addProperty("patchouli_loaded", true);
         Minecraft.getInstance().gui.getChat().clearMessages(true);
         Object api = Class.forName("vazkii.patchouli.api.PatchouliAPI").getMethod("get").invoke(null);

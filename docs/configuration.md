@@ -9,6 +9,9 @@ NeoForge writes `config/mastery-server.toml` in the instance directory. A file a
 | `baseActiveCapacity` | `0` | Assignable spells added to native equipment capacity and progression bonuses |
 | `defaultWorldTier` | `-1` | No provider means uncapped; set `0` to enforce tier-zero caps |
 | `creativeUsageXp` | `false` | Whether creative players earn usage XP |
+| `classSelectorEnabled` | `true` | Require players without a class to choose one on join, temporarily holding them in spectator mode |
+
+The class selector applies to both new players and existing players who have no saved class choice. It keeps players at their original location while they choose. Disabling `classSelectorEnabled` restores pending players' previous game modes on the next server tick; an empty class definition set also releases them. Chosen classes and their attribute modifiers remain active. See [classes](classes.md) for starting rewards and persistence.
 
 Native book capacity is read from Iron's equipment containers. No Mastery item tag or fixed per-book capacity substitutes for that value. Slot assignments never write into those containers.
 
@@ -16,11 +19,11 @@ A world-tier provider takes precedence over the fallback. Entering a lower tier 
 
 ## Local layout
 
-`config/mastery/layouts/<hash>.json` lives in the client's game directory. The key includes the server address or singleplayer save path, persistent world UUID, and player UUID.
+`config/mastery/layouts/<hash>.json` lives in the client's game directory. The key includes the server address or singleplayer save path, persistent world UUID, and player UUID. Player layouts save on closing the map or disconnecting, and restore on rejoining or restarting the client. Custom root positions, node offsets, orientations, expanded branches, camera position, and zoom are retained. Edit mode uses a separate temporary layout.
 
 Child offsets are relative to the first same-tree dependency by sorted ID, or the owning tree if there is none. This stable parent is a storage reference. Movement follows all prerequisite parents: inverse-square distance weights make a nearby parent influence a shared child more strongly. Synergy offsets use their owning tree as the storage reference.
 
-Dragging a parent moves its dependency descendants and preserves their relative offsets. Default growth follows eight compass sectors: `north`, `northeast`, `east`, `southeast`, `south`, `southwest`, `west`, and `northwest`. Root dragging chooses the sector relative to the fixed logical map center. Camera movement does not change orientation. Changing the root sector rotates custom child offsets with the branch.
+Dragging a parent moves its dependency descendants and preserves their relative offsets. Default growth follows eight compass sectors: `north`, `northeast`, `east`, `southeast`, `south`, `southwest`, `west`, and `northwest`. Root dragging chooses the sector relative to the fixed logical map center. Camera movement does not change orientation. Changing the root sector rotates custom child offsets with the branch. On load, saved root positions determine growth direction before branches are generated, including promoted roots and layouts with missing or stale orientation entries. Existing custom node offsets are retained.
 
 The **Sectors** toolbar button toggles radial boundary lines. This preference is saved as `show_sectors` in the local layout file; it does not hide dependency or synergy connectors.
 
@@ -55,15 +58,15 @@ XP, level, point, node, reset, validation, reload, export, and editor commands r
 | `/mastery tree list` | List loaded tree IDs |
 | `/mastery tree info <tree>` | Inspect level curve and initial section |
 | `/mastery xp get <player> <tree>` | Current and lifetime XP |
-| `/mastery xp add <player> <tree> <amount>` | Grant nonnegative XP |
+| `/mastery xp add <player> <tree> <amount>` | Grant an exact nonnegative XP amount, without XP gain modifiers |
 | `/mastery level get <player> <tree>` | Read proficiency level |
 | `/mastery level set <player> <tree> <level>` | Set level within tier caps |
 | `/mastery points get <player> <tree>` | Read that tree's balance |
 | `/mastery points add <player> <tree> <amount>` | Grant points and discover the tree |
 | `/mastery node unlock <player> <node>` | Assign rank 1 administratively |
 | `/mastery node rank <player> <node> <rank>` | Assign a rank within node/tier maxima |
-| `/mastery reset tree <player> <tree>` | Clear that tree's progression and discovery; preserve learned book tokens |
-| `/mastery reset all <player>` | Clear progression, assignments, and learned skill-book tokens |
+| `/mastery reset tree <player> <tree>` | Clear that tree's progression and discovery; preserve learned book tokens and class data |
+| `/mastery reset all <player>` | Clear progression, assignments, and learned skill-book tokens; preserve class data |
 | `/mastery graph validate` | Validate the live graph and report rejected reload errors |
 | `/mastery graph relayout` | Reorganize your local presentation |
 | `/mastery reload` | Reload only Mastery definitions, including fresh `masteryedits` overrides |
@@ -75,5 +78,9 @@ XP, level, point, node, reset, validation, reload, export, and editor commands r
 `/mastery export` must be run by a player and does not require edit mode. It saves under the client game directory at `config/exports/mastery-HH-mm-dd-MM-yyyy.zip`, using local client time. Existing filenames get `-2`, `-3`, and later suffixes. Chat reports the saved path or an error. Exporting does not trigger a reload.
 
 Administrative rank assignment bypasses price and purchase prerequisites. Effective effects still obey runtime requirements. Reducing and restoring levels does not award the same level's points twice. A reset intentionally clears that history.
+
+Progression resets preserve the selected class, its attribute modifiers, the one-time starting-reward receipt, and any queued starter items. A reset can remove class-granted points and skills, but it does not reopen selection or grant the starting package again. There is no class-change command.
+
+Gameplay and `MasteryAPI.grantXp` awards use the player's overall and per-tree XP modifiers. `/mastery xp add` supplies the exact requested amount to progression; tree and world-tier caps still apply. Direct skill-point grants are never multiplied. See [XP modifiers](experience.md).
 
 IDs are namespaced, for example `mastery:fire`, `mastery:fireball`, and the existing spell `irons_spellbooks:fireball`.

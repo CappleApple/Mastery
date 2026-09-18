@@ -69,8 +69,8 @@ public final class MasteryLifecycleGameTests {
     }
     @GameTest(templateNamespace="minecraft",template="bastion/mobs/empty")
     public static void loadedDatapackAndWorldIdentity(GameTestHelper helper) {
-        helper.assertTrue(MasteryRuntime.definitions().trees().size()==21,"Demo tree resources failed to load");
-        helper.assertTrue(MasteryRuntime.definitions().spells().size()==9,"Existing spell bindings failed to load");
+        helper.assertTrue(MasteryRuntime.definitions().trees().size()==22,"Demo tree resources failed to load");
+        helper.assertTrue(MasteryRuntime.definitions().spells().size()==10,"Existing spell bindings failed to load");
         helper.assertTrue(MasteryRuntime.lastReloadErrors.isEmpty(),"Demo graph rejected");
         String first=WorldIdentity.get(helper.getLevel().getServer());
         helper.assertTrue(!first.isBlank()&&first.equals(WorldIdentity.get(helper.getLevel().getServer())),"World identity not stable");

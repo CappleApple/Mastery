@@ -4,7 +4,7 @@ import java.util.*;
 
 /** Missing fields and literal default inherit; explicit leaf values override their parent scope. */
 public final class SettingsResolver {
-    public static final List<String> FIELDS=List.of("theme","unlock","charge","modifier_slots","appearance","effect_context","costs","cost_depth_percent");
+    public static final List<String> FIELDS=List.of("inherit_subtrees","skill_damage_xp","damage_filter","connections","theme","unlock","charge","modifier_slots","appearance","effect_context","costs","cost_depth_percent");
     private SettingsResolver(){}
     public static JsonObject merge(JsonObject base,JsonObject overrides) {
         JsonObject result=base.deepCopy();
@@ -26,12 +26,18 @@ public final class SettingsResolver {
         return result;
     }
     public static JsonObject builtins(String spell) {
-        JsonObject result=new JsonObject();result.add("costs",JsonNull.INSTANCE);result.addProperty("cost_depth_percent",0);result.addProperty("effect_context","");result.add("appearance",NodeAppearance.DEFAULT.toJson());result.add("theme",TreeTheme.DEFAULT.toJson());result.add("unlock",UnlockPresentation.DEFAULTS.toJson());
+        JsonObject result=new JsonObject();result.addProperty("inherit_subtrees",true);result.addProperty("skill_damage_xp",1);result.add("damage_filter",new JsonObject());result.add("costs",JsonNull.INSTANCE);result.addProperty("cost_depth_percent",0);result.addProperty("effect_context","");result.add("connections",ConnectionPresentation.DEFAULT.toJson());result.add("appearance",NodeAppearance.DEFAULT.toJson());result.add("theme",TreeTheme.DEFAULT.toJson());result.add("unlock",UnlockPresentation.DEFAULTS.toJson());
         result.add("charge",new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().toJsonTree(ChargeDefinition.defaults(spell)));
         result.add("modifier_slots",JsonParser.parseString("{\"base\":2,\"per_level\":1,\"max\":64}"));return result;
     }
     public static JsonObject resolved(DefinitionSet definitions,String tree,String spell,String node) {
-        JsonObject result=merge(builtins(spell),definitions.settingOverrides().getOrDefault("settings/mastery:defaults",new JsonObject()));
+        JsonObject base=builtins(spell);
+        var definition=definitions.nodes().get(node);
+        var shape=definition==null&&!tree.isBlank()||definition!=null&&definition.rootTree()!=null?NodeAppearance.Shape.PENTAGON:
+                definition!=null&&definition.type()==NodeType.ACTIVE?NodeAppearance.Shape.SQUARE:
+                definition!=null&&definition.type()==NodeType.MODIFIER?NodeAppearance.Shape.TRIANGLE:NodeAppearance.Shape.CIRCLE;
+        base.getAsJsonObject("appearance").addProperty("shape",shape.name().toLowerCase(Locale.ROOT));
+        JsonObject result=merge(base,definitions.settingOverrides().getOrDefault("settings/mastery:defaults",new JsonObject()));
         for(String key:List.of("trees/"+tree,"spells/"+spell,"nodes/"+node))result=merge(result,definitions.settingOverrides().getOrDefault(key,new JsonObject()));
         return result;
     }
@@ -49,7 +55,12 @@ public final class SettingsResolver {
         if(settings.has("costs")&&!settings.get("costs").isJsonNull())com.cappleapple.mastery.costs.CostDefinition.parse(settings.getAsJsonObject("costs"));
         if(settings.has("cost_depth_percent"))com.cappleapple.mastery.costs.CostDefinition.percent(settings.get("cost_depth_percent"));
         var context=settings.get("effect_context");if(!context.isJsonPrimitive()||!context.getAsJsonPrimitive().isString()||!context.getAsString().isEmpty()&&!context.getAsString().matches("[a-z0-9_.-]+:[a-z0-9/._-]+"))throw new IllegalArgumentException("effect_context must be empty or a context ID");
-        NodeAppearance.parse(settings.getAsJsonObject("appearance"));TreeTheme.parse(settings.getAsJsonObject("theme"));UnlockPresentation.parse(settings.getAsJsonObject("unlock"));
+        ConnectionPresentation.parse(settings.getAsJsonObject("connections"));NodeAppearance.parse(settings.getAsJsonObject("appearance"));TreeTheme.parse(settings.getAsJsonObject("theme"));UnlockPresentation.parse(settings.getAsJsonObject("unlock"));
+        com.cappleapple.mastery.mechanics.TreeModifiers.validate(settings.getAsJsonObject("damage_filter"));
+        if(!settings.get("inherit_subtrees").isJsonPrimitive()||!settings.getAsJsonPrimitive("inherit_subtrees").isBoolean())throw new IllegalArgumentException("inherit_subtrees must be boolean");
+        if(!settings.get("skill_damage_xp").isJsonPrimitive()||!settings.getAsJsonPrimitive("skill_damage_xp").isNumber())throw new IllegalArgumentException("skill_damage_xp must be numeric");
+        double skillXp=settings.get("skill_damage_xp").getAsDouble();
+        if(!Double.isFinite(skillXp)||skillXp<0||skillXp>1000000)throw new IllegalArgumentException("skill_damage_xp must be within 0..1000000");
         ChargeDefinition.parse(spell,settings.getAsJsonObject("charge"));modifierSlots(settings,1);
     }
 }

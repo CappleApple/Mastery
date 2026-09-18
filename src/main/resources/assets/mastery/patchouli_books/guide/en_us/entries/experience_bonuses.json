@@ -1,0 +1,23 @@
+{
+  "name": "Learning Bonuses",
+  "category": "mastery:progression",
+  "icon": "minecraft:experience_bottle",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Practice Faster",
+      "text": "Skills, equipment, and class attributes can increase the proficiency XP earned from your actions. An overall modifier affects every tree, while a tree modifier affects just its own discipline. These bonuses change how quickly your proficiency bar fills."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Combining Bonuses",
+      "text": "Overall and tree multipliers multiply together. With 20% extra overall XP and 50% extra Fire XP, 10 Fire XP becomes 18. An additional matching skill bonus of 25% makes that 22.5 XP. Fractional XP is retained."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Separate Currencies",
+      "text": "Learning bonuses do not multiply direct skill-point grants or Minecraft experience. They do not change a skill's purchase price. A server operator's direct XP command gives its exact stated amount. Tree level limits and world-tier limits still apply."
+    }
+  ]
+}

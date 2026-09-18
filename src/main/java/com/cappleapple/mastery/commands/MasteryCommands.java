@@ -31,7 +31,7 @@ public final class MasteryCommands {
             }))));
         root.then(literal("xp").requires(s->s.hasPermission(2))
             .then(literal("get").then(player().then(tree().executes(c->{var p=target(c);var id=net.minecraft.commands.arguments.ResourceLocationArgument.getId(c,"tree").toString();var state=MasteryRuntime.progress(p).tree(id);return say(c,p.getScoreboardName()+" / "+id+": "+state.xp()+" XP (lifetime "+state.lifetimeXp()+")");}))))
-            .then(literal("add").then(player().then(tree().then(argument("amount",DoubleArgumentType.doubleArg(0,1.0E12)).executes(c->result(c,MasteryRuntime.grantXp(target(c),net.minecraft.commands.arguments.ResourceLocationArgument.getId(c,"tree").toString(),DoubleArgumentType.getDouble(c,"amount")))))))));
+            .then(literal("add").then(player().then(tree().then(argument("amount",DoubleArgumentType.doubleArg(0,1.0E12)).executes(c->result(c,MasteryRuntime.grantXpExact(target(c),net.minecraft.commands.arguments.ResourceLocationArgument.getId(c,"tree").toString(),DoubleArgumentType.getDouble(c,"amount")))))))));
         root.then(literal("level").requires(s->s.hasPermission(2))
             .then(literal("get").then(player().then(tree().executes(c->say(c,"Level: "+MasteryRuntime.progress(target(c)).tree(net.minecraft.commands.arguments.ResourceLocationArgument.getId(c,"tree").toString()).level())))))
             .then(literal("set").then(player().then(tree().then(argument("level",IntegerArgumentType.integer(0,1000000)).executes(c->{

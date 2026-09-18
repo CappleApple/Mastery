@@ -23,6 +23,8 @@ public final class Mastery {
         MasteryAttachments.TYPES.register(bus);
         com.cappleapple.mastery.elemental.ElementalAttributes.TYPES.register(bus);
         bus.addListener(com.cappleapple.mastery.elemental.ElementalAttributes::attach);
+        com.cappleapple.mastery.progression.ExperienceAttributes.TYPES.register(bus);
+        bus.addListener(com.cappleapple.mastery.progression.ExperienceAttributes::attach);
         NeoForge.EVENT_BUS.register(com.cappleapple.mastery.elemental.ElementalDamage.class);
         com.cappleapple.mastery.items.MasteryItems.TYPES.register(bus);
         container.registerConfig(ModConfig.Type.SERVER,MasteryConfig.SPEC);

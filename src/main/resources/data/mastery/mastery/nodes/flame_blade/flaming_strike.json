@@ -1,0 +1,26 @@
+{
+  "tree": "mastery:flame_blade",
+  "name": "Flaming Strike",
+  "description": "",
+  "icon": "irons_spellbooks:textures/gui/spell_icons/flaming_strike.png",
+  "type": "active",
+  "cost": 1,
+  "max_rank": 5,
+  "level": 0,
+  "dependencies": [
+    {
+      "node": "mastery:spellblade_practice",
+      "rank": 1
+    }
+  ],
+  "effects": [
+    {
+      "type": "mastery:unlock_spell",
+      "spell": "irons_spellbooks:flaming_strike",
+      "level": 1,
+      "levels_per_rank": 1
+    }
+  ],
+  "visibility": "available",
+  "spell": "irons_spellbooks:flaming_strike"
+}

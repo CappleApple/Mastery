@@ -23,7 +23,7 @@ public final class CostService {
         return new CostPlanner.Budget(points,player==null?0:ExperiencePoints.total(player.experienceLevel,player.experienceProgress),inventory);
     }
     public static boolean affordable(DefinitionSet definitions,PlayerProgress progress,String node,Player player) {
-        try{return CostResolver.forNode(definitions,node).plan(budget(progress,player)).isPresent();}catch(RuntimeException ex){return false;}
+        try{return CostResolver.forNode(definitions,node).plan(CostResolver.gateBudget(definitions,progress,-1,budget(progress,player))).isPresent();}catch(RuntimeException ex){return false;}
     }
     public static void validateRuntime(DefinitionSet definitions,List<String> errors) {
         for(String node:definitions.nodes().keySet())try {validateItems(CostResolver.forNode(definitions,node).definition());}
@@ -38,7 +38,7 @@ public final class CostService {
     public static ProgressionService.Change purchase(DefinitionSet definitions,PlayerProgress progress,String node,int tier,ProgressionService.RequirementEvaluator requirements,ServerPlayer player) {
         return ProgressionService.purchase(definitions,progress,node,tier,requirements,definition->{
             try {
-                var resolved=CostResolver.forNode(definitions,node);validateItems(resolved.definition());var balances=budget(progress,player);var selected=resolved.plan(balances);
+                var resolved=CostResolver.forNode(definitions,node);validateItems(resolved.definition());var balances=CostResolver.gateBudget(definitions,progress,tier,budget(progress,player),requirements);var selected=resolved.plan(balances);
                 if(selected.isEmpty())return ProgressionService.Change.failure("Not enough resources: "+resolved.describe(id->id));
                 var plan=selected.get();
                 // Calculate every potentially failing conversion before touching any resource.

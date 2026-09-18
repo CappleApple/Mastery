@@ -34,22 +34,25 @@ public final class EditorValueScreen extends Screen {
     }
     private List<String> options(){
         var result=new TreeSet<>(EditorSchema.choices(kind,path,key));
+        if(kind.equals("classes")&&path.contains("starting_inventory")&&key.equals("id"))BuiltInRegistries.ITEM.keySet().forEach(id->result.add(id.toString()));
         switch(key){
+            case "categories" -> result.addAll(com.cappleapple.mastery.mechanics.DamageContext.CATEGORIES);
+            case "damage_tags" -> {if(minecraft.level!=null)minecraft.level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.DAMAGE_TYPE).getTagNames().forEach(id->result.add(id.location().toString()));}
             case "tree" -> result.addAll(ClientState.definitions().trees().keySet());
             case "node","exclusions" -> result.addAll(ClientState.definitions().nodes().keySet());
             case "spell" -> {result.addAll(ClientState.definitions().spells().keySet());io.redspace.ironsspellbooks.api.registry.SpellRegistry.REGISTRY.keySet().forEach(id->result.add(id.toString()));}
             case "context","contexts" -> result.addAll(ClientState.definitions().contexts().keySet());
             case "ref" -> result.addAll(path.contains("effects")||kind.equals("effects")?ClientState.definitions().effects().keySet():ClientState.definitions().requirements().keySet());
             case "icon","item","items","offhand" -> BuiltInRegistries.ITEM.keySet().forEach(id->result.add(id.toString()));
-            case "element" -> {var map=ClientState.definitions().toJson().getAsJsonObject("elements");if(map!=null)result.addAll(map.keySet());io.redspace.ironsspellbooks.api.registry.SchoolRegistry.REGISTRY.keySet().forEach(id->result.add(id.toString()));}
+            case "element","elements" -> {var map=ClientState.definitions().toJson().getAsJsonObject("elements");if(map!=null)result.addAll(map.keySet());io.redspace.ironsspellbooks.api.registry.SchoolRegistry.REGISTRY.keySet().forEach(id->result.add(id.toString()));}
             case "entities","entity" -> BuiltInRegistries.ENTITY_TYPE.keySet().forEach(id->result.add(id.toString()));
-            case "damage_type" -> {if(minecraft.level!=null)minecraft.level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.DAMAGE_TYPE).keySet().forEach(id->result.add(id.toString()));}
+            case "damage_type","damage_types" -> {if(minecraft.level!=null)minecraft.level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.DAMAGE_TYPE).keySet().forEach(id->result.add(id.toString()));}
             case "trigger","keyword" -> {var map=ClientState.definitions().toJson().getAsJsonObject(key.equals("trigger")?"triggers":"keywords");if(map!=null)result.addAll(map.keySet());}
             case "school" -> io.redspace.ironsspellbooks.api.registry.SchoolRegistry.REGISTRY.keySet().forEach(id->result.add(id.toString()));
             case "particle" -> BuiltInRegistries.PARTICLE_TYPE.entrySet().stream().filter(e->e.getValue() instanceof net.minecraft.core.particles.SimpleParticleType).forEach(e->result.add(e.getKey().location().toString()));
             case "block" -> BuiltInRegistries.BLOCK.keySet().forEach(id->result.add(id.toString()));
             case "enchantment" -> {if(minecraft.level!=null)minecraft.level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT).keySet().forEach(id->result.add(id.toString()));}
-            case "attribute","weapon_attribute","power_attribute","conversion_attribute","attunement_attribute","potency_attribute","mitigation_attribute" -> BuiltInRegistries.ATTRIBUTE.keySet().forEach(id->result.add(id.toString()));
+            case "attribute","xp_attribute","weapon_attribute","power_attribute","conversion_attribute","attunement_attribute","potency_attribute","mitigation_attribute" -> BuiltInRegistries.ATTRIBUTE.keySet().forEach(id->result.add(id.toString()));
             case "progress_sound","complete_sound" -> {result.add("default");result.add("none");BuiltInRegistries.SOUND_EVENT.keySet().forEach(id->result.add(id.toString()));}
             case "effect","added_effect" -> BuiltInRegistries.MOB_EFFECT.keySet().forEach(id->result.add(id.toString()));
         }

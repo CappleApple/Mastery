@@ -3,7 +3,7 @@
     "fill_direction": "vertical",
     "progress_sound": "minecraft:entity.experience_orb.pickup",
     "complete_sound": "minecraft:block.beacon.power_select",
-    "hold_delay_ms": 500
+    "hold_delay_ms": 100
   },
   "theme": {
     "inner_color": "#D3AD5B",
@@ -16,13 +16,22 @@
     "max": 64
   },
   "charge": {
+    "spell_levels_per_stage": 1,
     "ticks_per_level": 20,
     "instant_base_ticks": 10,
     "max_levels": 16,
     "burst_interval_ticks": 3
   },
   "appearance": {
-    "shape": "circle",
+    "scale": 1,
+    "root_scale": 1.3,
+    "shape": "default",
     "show_name": false
-  }
+  },
+  "connections": {
+    "parent_line_style": "dashed",
+    "child_line_style": "solid"
+  },
+  "inherit_subtrees": true,
+  "skill_damage_xp": 1
 }

@@ -1,0 +1,20 @@
+{
+  "tree": "mastery:two_handed",
+  "name": "Tempered Flame",
+  "description": "Each rank adds 10% Fire damage.",
+  "icon": "minecraft:blaze_powder",
+  "type": "passive",
+  "dependencies": [
+    "mastery:flame_blade/flame_edge"
+  ],
+  "max_rank": 3,
+  "cost": 1,
+  "effects": [
+    {
+      "type": "mastery:attribute",
+      "attribute": "mastery:fire_damage",
+      "amount": 0.1
+    }
+  ],
+  "visibility": "available"
+}

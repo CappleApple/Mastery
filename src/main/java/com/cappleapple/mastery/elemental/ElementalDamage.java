@@ -33,6 +33,7 @@ public final class ElementalDamage {
     private static final class HitBatch {
         final LivingEntity target;
         float applied;
+        com.cappleapple.mastery.mechanics.DamageContext context=com.cappleapple.mastery.mechanics.DamageContext.EMPTY;
         double criticalMultiplier=1;
         HitBatch(LivingEntity target) { this.target = target; }
     }
@@ -41,7 +42,10 @@ public final class ElementalDamage {
     }
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void applied(net.neoforged.neoforge.event.entity.living.LivingDamageEvent.Post event) {
-        if (partitioning(event.getEntity())) HIT_BATCHES.get().peek().applied += event.getNewDamage();
+        if (partitioning(event.getEntity())&&event.getNewDamage()>0) {
+            var batch=HIT_BATCHES.get().peek();batch.applied+=event.getNewDamage();
+            batch.context=batch.context.merge(com.cappleapple.mastery.mechanics.DamageContexts.capture(event.getSource()));
+        }
     }
     public static void recordCritical(LivingIncomingDamageEvent event,float before) {
         if(before>0 && partitioning(event.getEntity()) && !isWeaponBonus(event.getSource())) {
@@ -154,7 +158,7 @@ public final class ElementalDamage {
             state.mastery$setLastHurt(accepted?amount:previousHurt);
             target.invulnerableTime=accepted?resultingInvulnerability:previousInvulnerability;
             HIT_BATCHES.get().pop();if(HIT_BATCHES.get().isEmpty())HIT_BATCHES.remove();
-            com.cappleapple.mastery.mechanics.MechanicsRuntime.weaponHitFinished(target,source,batch.applied);
+            com.cappleapple.mastery.mechanics.MechanicsRuntime.weaponHitFinished(target,source,batch.applied,batch.context);
         }
     }
     private static boolean weaponSource(DamageSource source) {
@@ -163,6 +167,7 @@ public final class ElementalDamage {
     }
     private record Portion(DamageTypes.Type type,float amount,double converted) {}
     private static Holder<DamageType> holder(LivingEntity target,DamageTypes.Type type) {return target.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(type.damageType());}
+    public static DamageSource originalSource(DamageSource source){return source instanceof BonusSource bonus?originalSource(bonus.original):source;}
     public static boolean isWeaponBonus(DamageSource source) {return source instanceof BonusSource bonus&&bonus.supplemental;}
     /** Proc/DOT damage uses a scoped cooldown bypass so the initiating attack cannot swallow it. */
     public static boolean hurt(LivingEntity target,LivingEntity owner,String typeId,float amount) {

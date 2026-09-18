@@ -1,0 +1,44 @@
+{
+  "name": "Proficiency XP Bonuses",
+  "category": "mastery:editor",
+  "icon": "minecraft:experience_bottle",
+  "sortnum": 14,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Overall XP Attribute",
+      "text": "Add a mastery:attribute skill effect targeting mastery:experience_gain. It starts at 1. An add_value amount of 0.2 adds 20 percentage points per active rank. Classes can grant the same attribute through their Attributes list."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "A Specific Tree",
+      "text": "Bundled trees have attributes such as mastery:fire_experience_gain and mastery:flame_blade_experience_gain. These also start at 1. Overall and tree attributes multiply together. Attribute values are bounded from 0 to 100; zero disables earned XP for that scope."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Any Data-defined Tree",
+      "text": "Use the mastery:experience_gain effect for a tree added by your datapack. Set Tree to the desired tree ID and Amount to a fraction, such as 0.25 for 25% per active rank. Reset Tree or leave it empty to affect all trees. This effect does not require registering a new attribute."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Combining Skill Effects",
+      "text": "Matching mastery:experience_gain amounts add after rank scaling. The final factor is 1 plus that sum, limited to 0 through 101. Disabled or unavailable skills contribute nothing. This factor multiplies both the overall and tree XP attributes."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Choose an XP Attribute",
+      "text": "A tree's Xp attribute field can select another already registered multiplier attribute. For example, mastery:fire_experience_gain lets a custom tree share Fire's bonus. Leaving it empty uses the bundled matching attribute, or 1 for an unknown custom tree. Reload cannot create new attributes."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "What Changes",
+      "text": "Gameplay XP sources and MasteryAPI.grantXp apply these modifiers once. Direct points, Minecraft XP, and purchase costs are unaffected. /mastery xp add stays exact for administration. Existing level caps still apply; a once-only source is not replayed when bonuses change later."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Skill Damage XP",
+      "text": "Unlocked, enabled skills award XP to their own tree from damage dealt, regardless of damage type. Skill damage xp defaults to 1 per damage and can be overridden on trees or nodes; zero disables it. Normal damage XP sources run first. This supplies XP only if they did not credit the skill’s tree. Other trees and kill rewards still work normally."
+    }
+  ],
+  "flag": "mastery_edit_mode"
+}

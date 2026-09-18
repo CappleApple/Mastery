@@ -8,9 +8,11 @@ class ShapeOutlineTest {
     @Test void everyShapeStartsAtTopAndMovesClockwise() {
         for(Shape shape:Shape.values()) {
             assertEquals(0,ShapeOutline.fraction(shape,0,-20,20),1e-9);
-            assertEquals(.25,ShapeOutline.fraction(shape,20,0,20),1e-9);
+            double right=ShapeOutline.fraction(shape,20,0,20);
+            assertTrue(right>0&&right<.5);
+            if(shape!=Shape.PENTAGON&&shape!=Shape.TRIANGLE)assertEquals(.25,right,1e-9);
             assertEquals(.5,ShapeOutline.fraction(shape,0,20,20),1e-9);
-            assertEquals(.75,ShapeOutline.fraction(shape,-20,0,20),1e-9);
+            assertEquals(1-right,ShapeOutline.fraction(shape,-20,0,20),1e-9);
             double previous=-1;
             for(var pixel:ShapeOutline.pixels(shape,20,3)) {
                 assertTrue(pixel.fraction()>=previous);previous=pixel.fraction();

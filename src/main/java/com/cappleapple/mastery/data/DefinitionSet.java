@@ -8,7 +8,14 @@ public record DefinitionSet(Map<String, GroupDefinition> groups, Map<String, Tre
         Map<String, NodeDefinition> nodes, Map<String, SpellDefinition> spells,
         Map<String, ContextDefinition> contexts, Map<String, XpSourceDefinition> xpSources,
         Map<String, JsonObject> requirements, Map<String, JsonObject> effects, UnlockPresentation unlockDefaults, Map<String,JsonObject> settingOverrides,
-        Map<String,JsonObject> elements, Map<String,JsonObject> triggers, Map<String,JsonObject> keywords, Map<String,JsonObject> mobTypes, Map<String,JsonObject> weaponTypes) {
+        Map<String,JsonObject> elements, Map<String,JsonObject> triggers, Map<String,JsonObject> keywords, Map<String,JsonObject> mobTypes, Map<String,JsonObject> weaponTypes, Map<String,JsonObject> classes) {
+    public DefinitionSet(Map<String, GroupDefinition> groups, Map<String, TreeDefinition> trees,
+            Map<String, NodeDefinition> nodes, Map<String, SpellDefinition> spells,
+            Map<String, ContextDefinition> contexts, Map<String, XpSourceDefinition> xpSources,
+            Map<String, JsonObject> requirements, Map<String, JsonObject> effects, UnlockPresentation unlockDefaults, Map<String,JsonObject> settingOverrides,
+            Map<String,JsonObject> elements, Map<String,JsonObject> triggers, Map<String,JsonObject> keywords, Map<String,JsonObject> mobTypes, Map<String,JsonObject> weaponTypes) {
+        this(groups,trees,nodes,spells,contexts,xpSources,requirements,effects,unlockDefaults,settingOverrides,elements,triggers,keywords,mobTypes,weaponTypes,Map.of());
+    }
     public static final DefinitionSet EMPTY = new DefinitionSet(Map.of(), Map.of(), Map.of(), Map.of(),
             Map.of(), Map.of(), Map.of(), Map.of());
     public DefinitionSet(Map<String, GroupDefinition> groups, Map<String, TreeDefinition> trees,
@@ -45,6 +52,7 @@ public record DefinitionSet(Map<String, GroupDefinition> groups, Map<String, Tre
         keywords = Map.copyOf(keywords);
         mobTypes = Map.copyOf(mobTypes);
         weaponTypes = Map.copyOf(weaponTypes);
+        classes = Map.copyOf(classes);
     }
     public JsonObject toJson() { return DefinitionLoader.toJson(this); }
     public static DefinitionSet fromJson(JsonObject json) { return DefinitionLoader.fromJson(json); }

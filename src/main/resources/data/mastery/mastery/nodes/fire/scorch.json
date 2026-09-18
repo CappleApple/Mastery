@@ -1,14 +1,14 @@
 {
   "tree": "mastery:fire",
   "name": "Scorch",
-  "description": "Hits can stack Scorch. Its damage over time builds toward a fiery burst.",
+  "description": "Fireball hits have a 25% chance to apply Scorch.",
   "icon": "minecraft:book",
-  "type": "passive",
+  "type": "modifier",
   "cost": 1,
   "max_rank": 1,
   "level": 0,
   "dependencies": [
-    "mastery:fire/foundation"
+    "mastery:fireball"
   ],
   "effects": [
     {
@@ -17,5 +17,7 @@
     }
   ],
   "visibility": "available",
-  "toggleable": true
+  "toggleable": true,
+  "spell": "irons_spellbooks:fireball",
+  "modifier": "mastery:native_spell"
 }

@@ -6,7 +6,7 @@ public final class UnlockHold {
     public static final int DINGS = 8;
     private int ticks,delayTicks;
     private boolean active;
-    public void start() {start(500);}
+    public void start() {start(com.cappleapple.mastery.data.UnlockPresentation.DEFAULTS.holdDelayMs());}
     public void start(int delayMs) {ticks=0;delayTicks=Math.max(0,(delayMs+49)/50);active=true;}
     public void cancel() {active=false;ticks=0;}
     public boolean active() {return active;}

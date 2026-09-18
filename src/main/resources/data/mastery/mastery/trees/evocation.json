@@ -53,5 +53,10 @@
       "active_capacity": 12
     }
   ],
-  "points_per_award": 1
+  "points_per_award": 1,
+  "damage_filter": {
+    "elements": [
+      "irons_spellbooks:evocation"
+    ]
+  }
 }

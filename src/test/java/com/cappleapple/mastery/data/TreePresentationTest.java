@@ -16,6 +16,21 @@ class TreePresentationTest {
         assertEquals("vertical",resolved.getAsJsonObject("unlock").get("fill_direction").getAsString());
         assertEquals("default",defs.toJson().getAsJsonObject("nodes").getAsJsonObject("test:node").get("unlock").getAsString());
     }
+    @Test void lineStylesInheritIndependentlyAndSurviveDefinitionSync() {
+        var defaults=JsonParser.parseString("{\"connections\":{\"parent_line_style\":\"solid\",\"child_line_style\":\"dashed\"}}").getAsJsonObject();
+        var tree=JsonParser.parseString("{\"connections\":{\"child_line_style\":\"solid\"}}").getAsJsonObject();
+        var node=JsonParser.parseString("{\"tree\":\"test:tree\",\"connections\":{\"parent_line_style\":\"default\",\"child_line_style\":\"dashed\"}}").getAsJsonObject();
+        var loaded=DefinitionLoader.load(Map.of("settings",Map.of("mastery:defaults",defaults),"trees",Map.of("test:tree",tree),"nodes",Map.of("test:node",node)));
+        assertTrue(loaded.valid(),loaded.errors().toString());
+        var synced=DefinitionSet.fromJson(loaded.definitions().toJson());
+        var styles=ConnectionPresentation.parse(SettingsResolver.forNode(synced,"test:node").getAsJsonObject("connections"));
+        assertEquals(ConnectionPresentation.Style.SOLID,styles.parentLineStyle());
+        assertEquals(ConnectionPresentation.Style.DASHED,styles.childLineStyle());
+        assertEquals(ConnectionPresentation.DEFAULT,ConnectionPresentation.parse(new JsonObject()));
+        assertEquals(styles,ConnectionPresentation.parse(styles.toJson()));
+        node.getAsJsonObject("connections").addProperty("child_line_style","zigzag");
+        assertFalse(DefinitionLoader.load(Map.of("trees",Map.of("test:tree",tree),"nodes",Map.of("test:node",node))).valid());
+    }
     @Test void themesValidateAndSurviveDefinitionSync() {
         var theme=new TreeTheme("#abcdef","#012345",.35);
         assertEquals(theme,TreeTheme.parse(theme.toJson()));
@@ -56,7 +71,7 @@ class TreePresentationTest {
     }
     @Test void holdingWaitsBeforeEightDingsAndCancelsCleanly() {
         var hold=new UnlockHold();hold.start();int dings=0;
-        for(int tick=0;tick<10;tick++){assertEquals(-1,hold.advance());assertFalse(hold.presenting());assertEquals(0,hold.progress());}
+        for(int tick=0;tick<2;tick++){assertEquals(-1,hold.advance());assertFalse(hold.presenting());assertEquals(0,hold.progress());}
         for(int tick=0;tick<20;tick++){if(hold.advance()>=0)dings++;assertEquals(tick==19,hold.ready());}
         assertEquals(8,dings);assertEquals(1,hold.progress());
         for(int tick=0;tick<40;tick++)assertEquals(-1,hold.advance());

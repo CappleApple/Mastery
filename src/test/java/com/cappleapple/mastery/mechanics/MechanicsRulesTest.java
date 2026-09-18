@@ -11,6 +11,24 @@ import static org.junit.jupiter.api.Assertions.*;
 class MechanicsRulesTest {
     private static JsonObject json(String value) { return JsonParser.parseString(value).getAsJsonObject(); }
 
+    @Test void keywordTooltipFieldsRejectMalformedValues() {
+        var result=DefinitionLoader.load(Map.of("keywords",Map.of("test:bad",json("{\"name\":[],\"description\":{}}"))));
+        assertFalse(result.valid());
+        assertTrue(result.errors().stream().anyMatch(e->e.contains("name must be a string")));
+        assertTrue(result.errors().stream().anyMatch(e->e.contains("description must be a string")));
+        assertTrue(DefinitionLoader.load(Map.of("keywords",Map.of("test:good",json("{\"name\":\"Scorch\",\"description\":\"A stacking burn.\"}")))).valid());
+    }
+    @Test void decayAndKeywordModifierDefinitionsValidateAndRoundTrip() {
+        var valid=DefinitionLoader.load(Map.of("keywords",Map.of("test:ember",json("{\"duration\":0,\"decay_delay\":10,\"decay_interval\":5,\"decay_stacks\":2,\"stacks_lost_actions\":[],\"all_stacks_lost_actions\":[]}")),
+            "effects",Map.of("test:bonus",json("{\"type\":\"mastery:keyword_modifier\",\"keyword\":\"test:ember\",\"stacks\":2,\"damage_percent\":0.25,\"duration\":40}"))));
+        assertTrue(valid.valid(),valid.errors().toString());assertEquals(valid.definitions().toJson(),DefinitionSet.fromJson(valid.definitions().toJson()).toJson());
+        for(String field:List.of("duration","decay_delay","decay_interval","decay_stacks")) {
+            assertFalse(DefinitionLoader.load(Map.of("keywords",Map.of("test:bad",json("{\""+field+"\":-1}")))).valid());
+        }
+        assertFalse(DefinitionLoader.load(Map.of("keywords",Map.of("test:bad",json("{\"decay_interval\":0}")))).valid());
+        assertFalse(DefinitionLoader.load(Map.of("keywords",Map.of("test:bad",json("{\"stacks_lost_actions\":[{\"type\":\"keyword\",\"keyword\":\"test:missing\"}]}")))).valid());
+        assertFalse(DefinitionLoader.load(Map.of("effects",Map.of("test:bad",json("{\"type\":\"mastery:keyword_modifier\",\"keyword\":\"test:missing\"}")))).valid());
+    }
     @Test void chanceUsesPercentagePointsAndClamps() {
         assertEquals(.45, MechanicsRules.chance(.25, .20), .000001);
         assertEquals(1, MechanicsRules.chance(.9, .4));

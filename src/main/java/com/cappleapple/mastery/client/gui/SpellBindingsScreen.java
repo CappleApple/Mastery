@@ -32,13 +32,12 @@ public final class SpellBindingsScreen extends Screen {
         }
         visible=BindingSlots.visible(ClientState.progress().loadouts(),mode,context,ClientState.capacity());
         boolean hotbarMode=mode.equals("hotbar");
-        int pageSize=hotbarMode?4:16;
-        int pages=hotbarMode?(visible.stream().mapToInt(Integer::intValue).max().orElse(0)/4+1):Math.max(1,(visible.size()+15)/16);
+        int pages=hotbarMode?1:Math.max(1,(visible.size()+15)/16);
         slotPage=Math.clamp(slotPage,0,pages-1);
         if(selectedSlot>=0&&!visible.contains(selectedSlot))selectedSlot=-1;
         int origin=width/2-124;
         for(int cell=0;cell<(hotbarMode?4:Math.min(16,visible.size()-slotPage*16));cell++) {
-            int slot=hotbarMode?slotPage*4+cell:visible.get(slotPage*16+cell);
+            int slot=hotbarMode?cell:visible.get(slotPage*16+cell);
             String spell=BindingSlots.get(ClientState.progress().loadouts(),context,slot);
             boolean available=visible.contains(slot);
             var widget=new NativeSpellSlot(hotbarMode?width/2-86+cell*50:origin+(cell%8)*32,101+(cell/8)*35,spell,
@@ -48,7 +47,7 @@ public final class SpellBindingsScreen extends Screen {
             });
             widget.active=available;addRenderableWidget(widget);
         }
-        if(pages>1) {
+        if(!hotbarMode&&pages>1) {
             addRenderableWidget(Button.builder(Component.literal("<"),b->{slotPage--;selectedSlot=-1;rebuild();}).bounds(origin-28,117,22,20).build()).active=slotPage>0;
             addRenderableWidget(Button.builder(Component.literal(">"),b->{slotPage++;selectedSlot=-1;rebuild();}).bounds(origin+256,117,22,20).build()).active=slotPage+1<pages;
         }
@@ -84,14 +83,13 @@ public final class SpellBindingsScreen extends Screen {
         graphics.drawCenteredString(font,heading,width/2,87,0xDDDDDD);
         if(visible.isEmpty())graphics.drawCenteredString(font,ClientState.capacity()==0?"No spell slots available. Equip a spellbook or unlock more slots.":"All spell slots are assigned to other hotbar sets.",width/2,153,0xAAAAAA);
         if(mode.equals("hotbar")) {
-            for(int cell=0;cell<4;cell++)graphics.drawCenteredString(font,com.cappleapple.mastery.client.MasteryClient.ACTIVE_SLOTS[cell].getTranslatedKeyMessage(),width/2-75+cell*50,127,visible.contains(slotPage*4+cell)?0xDDDDDD:0x666666);
-            if(visible.stream().anyMatch(slot->slot>=4))graphics.drawCenteredString(font,"Page "+(slotPage+1),width/2,145,0xAAAAAA);
+            for(int cell=0;cell<4;cell++)graphics.drawCenteredString(font,com.cappleapple.mastery.client.MasteryClient.ACTIVE_SLOTS[cell].getTranslatedKeyMessage(),width/2-75+cell*50,127,visible.contains(cell)?0xDDDDDD:0x666666);
         } else for(int index=slotPage*16;index<Math.min(visible.size(),slotPage*16+16);index++) {
             int cell=index%16;graphics.drawString(font,Integer.toString(visible.get(index)+1),width/2-124+(cell%8)*32,125+(cell/8)*35,0xAAAAAA);
         }
         if(!suggested.isBlank())graphics.drawCenteredString(font,"Choose a slot for "+ClientState.name(suggested),width/2,180,0xFFE2B3);
         else graphics.drawCenteredString(font,selectedSlot>=0?"Choose a spell for slot "+(selectedSlot+1):"Click a slot to assign, replace, or clear its spell.",width/2,180,0xDDDDDD);
-        if(selectedSlot<0)graphics.drawCenteredString(font,"Four cast keys per page. Use [ and ] to change pages while playing.",width/2,height-43,0x999999);
+        if(mode.equals("quick_cast")&&selectedSlot<0)graphics.drawCenteredString(font,"Four cast keys per page. Use [ and ] to change pages while playing.",width/2,height-43,0x999999);
         super.render(graphics,mx,my,delta);
     }
 }

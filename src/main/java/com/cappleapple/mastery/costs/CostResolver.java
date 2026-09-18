@@ -25,6 +25,23 @@ public final class CostResolver {
         var points=new LinkedHashMap<String,Integer>();player.trees().forEach((id,tree)->points.put(id,tree.points()));
         return new CostPlanner.Budget(points,0,List.of());
     }
+    /** Stored points in a gated branch cannot fund another tree until its root is unlocked. */
+    public static CostPlanner.Budget pointsBudget(DefinitionSet definitions,PlayerProgress player,int worldTier) {
+        var points=new LinkedHashMap<String,Integer>();
+        player.trees().forEach((id,tree)->{if(PromotedTrees.unlocked(definitions,player,id,worldTier))points.put(id,tree.points());});
+        return new CostPlanner.Budget(points,0,List.of());
+    }
+    public static CostPlanner.Budget pointsBudget(DefinitionSet definitions,PlayerProgress player,int worldTier,com.cappleapple.mastery.progression.ProgressionService.RequirementEvaluator evaluator) {
+        var points=new LinkedHashMap<String,Integer>();
+        player.trees().forEach((id,tree)->{if(PromotedTrees.unlocked(definitions,player,id,worldTier,evaluator))points.put(id,tree.points());});
+        return new CostPlanner.Budget(points,0,List.of());
+    }
+    public static CostPlanner.Budget gateBudget(DefinitionSet definitions,PlayerProgress player,int worldTier,CostPlanner.Budget budget,com.cappleapple.mastery.progression.ProgressionService.RequirementEvaluator evaluator) {
+        return new CostPlanner.Budget(pointsBudget(definitions,player,worldTier,evaluator).points(),budget.experience(),budget.inventory());
+    }
+    public static CostPlanner.Budget gateBudget(DefinitionSet definitions,PlayerProgress player,int worldTier,CostPlanner.Budget budget) {
+        return new CostPlanner.Budget(pointsBudget(definitions,player,worldTier).points(),budget.experience(),budget.inventory());
+    }
     /** Worst point demand for one currency; OR chooses a maximum, AND accumulates. */
     public static long maximumPoints(CostDefinition definition,String currency,Resolved resolved) {
         if(definition instanceof CostDefinition.Group group) {
@@ -36,7 +53,15 @@ public final class CostResolver {
     public static void validate(DefinitionSet definitions,List<String> errors) {
         for(String node:definitions.nodes().keySet())try {
             var cost=forNode(definitions,node);validate(cost.definition(),cost,definitions);
+            var definition=definitions.nodes().get(node);
+            if(definition.rootTree()!=null&&!initiallyPayable(cost.definition(),cost,PromotedTrees.treeId(definition)))
+                throw new IllegalArgumentException("root purchase requires its own locked point currency; add a route paid with the previous tree, Minecraft XP, or items");
         }catch(RuntimeException ex){errors.add("nodes/"+node+": invalid costs: "+ex.getMessage());}
+    }
+    private static boolean initiallyPayable(CostDefinition definition,Resolved resolved,String lockedCurrency) {
+        if(definition instanceof CostDefinition.Group group)return group.all()?group.children().stream().allMatch(child->initiallyPayable(child,resolved,lockedCurrency)):group.children().stream().anyMatch(child->initiallyPayable(child,resolved,lockedCurrency));
+        var leaf=(CostDefinition.Leaf)definition;
+        return !leaf.type().equals("points")||!(leaf.selector().isBlank()?resolved.owningTree():leaf.selector()).equals(lockedCurrency)||CostDefinition.amount(leaf,resolved.depth(),resolved.depthPercent())==0;
     }
     private static void validate(CostDefinition definition,Resolved resolved,DefinitionSet definitions) {
         if(definition instanceof CostDefinition.Group group){group.children().forEach(child->validate(child,resolved,definitions));return;}

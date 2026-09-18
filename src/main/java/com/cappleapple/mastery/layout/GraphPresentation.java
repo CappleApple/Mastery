@@ -27,6 +27,13 @@ public final class GraphPresentation {
         }
         return List.copyOf(result);
     }
+    /** Keep outgoing connections until both animated endpoints finish leaving the graph. */
+    public static List<GraphLayout.Edge> transitionEdges(List<GraphLayout.Edge> previous,List<GraphLayout.Edge> next,Set<String> visible,Set<String> animated) {
+        var result=new LinkedHashSet<>(next);
+        for(var edge:previous)if((!visible.contains(edge.from())||!visible.contains(edge.to()))
+                &&animated.contains(edge.from())&&animated.contains(edge.to()))result.add(edge);
+        return List.copyOf(result);
+    }
     public static Set<String> visibleAncestors(String id,Map<String,GraphLayout.Entry> entries,Set<String> visible) {
         Set<String> result=new TreeSet<>(),seen=new HashSet<>();ArrayDeque<String> pending=new ArrayDeque<>();pending.add(id);
         while(!pending.isEmpty()) {

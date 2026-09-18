@@ -8,7 +8,7 @@ Mastery modifies existing spells and assigns them to hotbar or shared quick-cast
 
 - Each specialization has its own XP, level, and points. The bundled rules award **one point every level**. Each tree's maximum level is calculated from all rank costs and its point-award schedule.
 - School XP comes from damage actually dealt with an Iron's registered school damage type. Ordinary vanilla fire damage does not count as Fire school damage.
-- Trees appear when you first receive a point. Spending the last point keeps them visible.
+- Trees appear when you first receive a point or are granted a starting skill. Spending the last point keeps them visible.
 - Nodes can be purchased repeatedly up to their rank limit. Children support required ranks and nested AND/OR parent groups; the default view reveals them when their prerequisites are first met.
 - Press **M** to open the single map. Drag the background to pan; scroll to zoom; right-click a node to expand or collapse it. Left-click selects its details; hold to buy a rank. Middle-click toggles an unlocked node. Press **F** to center the selected node.
 - Drag roots or individual children. Descendants follow their parents, with closer parents exerting more influence on shared children. Child positions save as relative offsets.
@@ -17,12 +17,20 @@ Mastery modifies existing spells and assigns them to hotbar or shared quick-cast
 - Zoom out to 0.01% while nodes retain a configurable minimum screen size and stay separated. Root tooltips show level, points, and XP; skill-node tooltips show rank and stat bonuses; proficiency level-ups play a sound and show a HUD toast.
 - Root XP fills around the selected circle, square, diamond, or hexagon outline. Skill icons can use item, native spell, or resource-pack images.
 - Purchase costs support nested AND/OR choices across several trees' points, raw Minecraft XP, and items, with optional depth scaling.
+- Any node can become a new tree root while keeping its prerequisites and purchase cost. Its branch gains a separate XP curve and point currency. The bundled Flame Blade branch combines Two-Handed and Fire practice.
+- Overall and per-tree XP attributes let skills and classes change proficiency gain. Data-defined XP effects can target custom trees.
 - Tree themes customize outer outlines and connections. Purchased nodes can be disabled independently through their details panel.
 - Layouts save locally per client, world, and player, including the camera and expanded branches.
 
 Weapon-tree attribute bonuses apply only while their configured combat context is active. Bow damage and crossbow velocity bonuses use Apothic Attributes.
 
 Two-handed weapon classification comes exclusively from Better Combat's resolved weapon attributes. There is no axe or item-tag fallback for two-handed XP.
+
+## Classes
+
+Players without a class choose one when joining, including existing players after installing this version. The selector temporarily places them in spectator mode at their saved location and restores their previous game mode after selection. Set `classSelectorEnabled = false` in the server config to disable mandatory selection.
+
+The bundled classes are **Warrior**, **Ranger**, and **Mage**. Pack authors can define class icons, starting points in several trees, pre-unlocked skill ranks, starting items with components, and persistent attribute modifiers. Starter armor equips automatically, moving displaced gear into inventory. Selection preserves existing progression; overflow starter items wait for inventory space. Rewards are granted once and are not repeated by reconnecting, dying, or resetting progression. See [class definitions](docs/classes.md).
 
 ## Spells and equipment
 
@@ -46,7 +54,7 @@ See [damage types and matchups](docs/elemental.md), [combat scripting](docs/mech
 
 Consumable `mastery:skill_book` items unlock hidden branches through persistent tokens. Their flat book covers display the matching node's icon. They are not equipment and do not inscribe spells. Pack authors choose the token and gated nodes; see [skill-book data](docs/datapacks.md).
 
-Operators can use `/mastery edit_mode true` to enable editing for themselves. This view shows every tree fully expanded in its default layout, including book-gated branches. Right-click nodes to edit definitions, add children or trees, and delete definitions. Visual forms cover nested settings, dependencies, requirements, effects, and lists. The Definitions browser also exposes XP sources and reusable definitions. A syntax-colored JSON view remains available. Saves write world-specific `masteryedits` overrides and refresh only Mastery data. `/mastery edit_mode false` restores the normal view. Use `/mastery export` to save the accepted definitions as a datapack ZIP in your client's `config/exports/` folder. See [the editor](docs/editor.md).
+Operators can use `/mastery edit_mode true` to enable editing for themselves. This view shows every tree fully expanded in its default layout, including book-gated branches. Right-click nodes to edit definitions, add children or trees, and delete definitions. Visual forms cover nested settings, dependencies, requirements, effects, and lists. The Definitions browser also exposes classes, XP sources, and reusable definitions. Node forms can promote a node into an independent tree root. A syntax-colored JSON view remains available. Saves write world-specific `masteryedits` overrides and refresh only Mastery data. `/mastery edit_mode false` restores the normal view. Use `/mastery export` to save the accepted definitions as a datapack ZIP in your client's `config/exports/` folder. See [the editor](docs/editor.md).
 
 ## Installation
 
@@ -64,9 +72,12 @@ Install Mastery on both client and server with:
 
 ## Data and commands
 
-The bundled data provides physical and crafting proficiency trees alongside Iron's nine schools. Pack authors can replace progression rules and define upgrades for registered spells without Java. Classes are not bundled; integrations can grant starting points.
+The bundled data provides physical and crafting proficiency trees alongside Iron's nine schools, the Flame Blade specialization, and three starting classes. Pack authors can replace these definitions and define upgrades for registered spells without Java.
 
 - [Datapack reference](docs/datapacks.md)
+- [Classes and starting rewards](docs/classes.md)
+- [Proficiency XP modifiers](docs/experience.md)
+- [Promoted tree roots](docs/roots.md)
 - [Purchase costs and depth scaling](docs/costs.md)
 - [Configuration and commands](docs/configuration.md)
 - [Extension API](docs/api.md)
@@ -88,9 +99,9 @@ Use `/mastery reload` after changing Mastery definitions. It also reads freshly 
 .\gradlew.bat runGameTestServer
 ```
 
-Java package: `com.cappleapple.mastery`. Output: `build/libs/mastery-1.2.1.jar`. Use `./gradlew` on other platforms.
+Java package: `com.cappleapple.mastery`. Output: `build/libs/mastery-1.4.0.jar`. Use `./gradlew` on other platforms.
 
-`build/distributions/mastery-demo-1.2.1.zip` contains the bundled datapack for customization. Regenerate its definitions with `python scripts/generate_demo.py`; then add the mechanics examples with `python scripts/generate_mechanics_examples.py`; GUI sprites with `python tools/generate_gui_assets.py`; the Skill Book base texture with `python tools/generate_item_assets.py`.
+`build/distributions/mastery-demo-1.4.0.zip` contains the bundled datapack for customization. The build packages the definitions in `src/main/resources/data` with the metadata from `examples/demo`.
 
 ## License
 

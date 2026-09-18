@@ -2,8 +2,11 @@ package com.cappleapple.mastery.spells;
 
 /** Native spell adjustments. No spell implementation, projectile or resource state lives in Mastery. */
 public final class SpellModifiers {
-    private int levels;
+    private int levels,extraCharges;
     private double mana=1,cooldown=1,castTime=1;
+    public int extraCharges() { return extraCharges; }
+    public void addCharges(int amount) { extraCharges=Math.clamp((long)extraCharges+Math.max(0,amount),0,10000); }
+    public int withCharges(int current) { return (int)Math.clamp((long)current+extraCharges,1,Integer.MAX_VALUE); }
     public int levels() { return levels; }
     public double manaMultiplier() { return mana; }
     public double cooldownMultiplier() { return cooldown; }

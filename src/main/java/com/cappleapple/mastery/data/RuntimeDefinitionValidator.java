@@ -17,6 +17,8 @@ public final class RuntimeDefinitionValidator {
         com.cappleapple.mastery.mechanics.MechanicsValidation.validateRuntime(definitions,errors);
         com.cappleapple.mastery.crafting.CraftingService.validateRuntime(definitions,errors);
         com.cappleapple.mastery.costs.CostService.validateRuntime(definitions,errors);
+        com.cappleapple.mastery.classes.ClassService.validateRuntime(definitions,errors);
+        com.cappleapple.mastery.progression.ExperienceModifiers.validateRuntime(definitions,errors);
         for(var node:definitions.nodes().values()){
             for(var requirement:node.requirements())check(requirement,false,"nodes/"+node.id(),errors);
             for(var effect:node.effects())check(effect,true,"nodes/"+node.id(),errors);

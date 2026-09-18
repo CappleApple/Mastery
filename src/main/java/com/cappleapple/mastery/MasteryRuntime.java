@@ -51,6 +51,7 @@ public final class MasteryRuntime {
                 SpellService.interrupt(player,"reload");
                 ProgressionService.reconcile(next,progress(player));
                 SpellService.reconcile(player); EffectService.rebuild(player);
+                com.cappleapple.mastery.classes.ClassService.reload(player);
                 sendDefinitions(player); sync(player);
             }
         });
@@ -65,6 +66,7 @@ public final class MasteryRuntime {
         if(!DIRTY.remove(player.getUUID()))return;
         ProgressionService.refreshUnlocks(definitions,progress(player),worldTier(player),j->RequirementRegistry.test(new RequirementContext(player,new JsonObject()),j));
         var json=progress(player).toJson();
+        json.add("class_selection",com.cappleapple.mastery.classes.ClassService.snapshot(player));
         json.addProperty("edit_mode",com.cappleapple.mastery.editor.EditorService.enabled(player));
         json.addProperty("definition_revision",definitionRevision);
         var ability=SpellService.snapshot(player);
@@ -74,6 +76,7 @@ public final class MasteryRuntime {
         MasteryNetwork.send(player,"progress",json.toString());
     }
     public static void tick(ServerPlayer player) {
+        com.cappleapple.mastery.classes.ClassService.tick(player);
         EffectService.refreshWeaponContext(player);
         SpellService.tick(player);
         if(player.tickCount%20==0) {
@@ -87,16 +90,23 @@ public final class MasteryRuntime {
     public static void login(ServerPlayer player) {
         ProgressionService.reconcile(definitions,progress(player));
         SpellService.reconcile(player); EffectService.rebuild(player);
+        com.cappleapple.mastery.classes.ClassService.login(player);
         sendDefinitions(player);sync(player);flush(player);
     }
     public static void logout(ServerPlayer player) {
+        com.cappleapple.mastery.classes.ClassService.logout(player);
         SpellService.forget(player);EffectService.clear(player);
         com.cappleapple.mastery.editor.EditorService.forget(player);
         LAST_ERRORS.remove(player.getUUID());DIRTY.remove(player.getUUID());REQUEST_TICK.remove(player.getUUID());REQUEST_COUNT.remove(player.getUUID());LAST_TIER.remove(player.getUUID());
     }
     public static ProgressionService.Change grantXp(ServerPlayer player,String tree,double amount) {
+        return grantXpExact(player,tree,com.cappleapple.mastery.progression.ExperienceModifiers.apply(player,tree,amount));
+    }
+    public static ProgressionService.Change grantXpExact(ServerPlayer player,String tree,double amount) {
         if(!definitions.trees().containsKey(tree))return ProgressionService.Change.failure("Unknown tree: "+tree);
-        int before=progress(player).tree(tree).level();
+        var promotedRoot=com.cappleapple.mastery.data.PromotedTrees.root(definitions,tree);
+        if(promotedRoot!=null&&EffectService.eligibleRank(player,promotedRoot)<=0)return ProgressionService.Change.failure("Unlock the tree root before earning its XP");
+        var previous=progress(player).trees().get(tree);int before=previous==null?0:previous.level();
         var result=ProgressionService.addXp(definitions,progress(player),tree,amount,worldTier(player));
         if(result.success()) {
             NeoForge.EVENT_BUS.post(new ProficiencyChangedEvent(player,tree,before,progress(player).tree(tree).level()));
@@ -116,6 +126,7 @@ public final class MasteryRuntime {
             JsonObject context=data.deepCopy();
             if(!context.has("context"))context.addProperty("context",SpellService.combatContext(player));
             var state=progress(player);
+            Set<String> creditedTrees=new HashSet<>();
             for(var source:xpIndex.getOrDefault(event,List.of())) {
                 if(source.once()&&state.usageGrants().contains(source.id()))continue;
                 if(!RequirementRegistry.test(new RequirementContext(player,context),source.condition()))continue;
@@ -124,8 +135,19 @@ public final class MasteryRuntime {
                 if(!Double.isFinite(amount)||amount<0)continue;
                 var result=grantXp(player,source.tree(),amount);
                 if(result.success()) {
+                    if(amount>0)creditedTrees.add(source.tree());
                     if(source.points()>0)grantPoints(player,source.tree(),source.points());
                     if(source.once())state.usageGrants().add(source.id());
+                }
+            }
+            if(event.equals("damage")&&context.has("skill_spell")) {
+                String spell=context.get("skill_spell").getAsString();
+                String nodeId=SpellService.grantingNode(player,spell);
+                var node=definitions.nodes().get(nodeId);
+                if(node!=null&&!creditedTrees.contains(node.tree())&&EffectService.active(player,node)) {
+                    double multiplier=SettingsResolver.forNode(definitions,nodeId).get("skill_damage_xp").getAsDouble();
+                    double damage=RequirementRegistry.number(context,"damage",0);
+                    if(multiplier>0&&damage>0)grantXp(player,node.tree(),damage*multiplier);
                 }
             }
             EffectService.onUsage(player,event,context);
@@ -135,9 +157,12 @@ public final class MasteryRuntime {
         long tick=player.serverLevel().getGameTime();
         if(REQUEST_TICK.getOrDefault(player.getUUID(),-1L)!=tick){REQUEST_TICK.put(player.getUUID(),tick);REQUEST_COUNT.put(player.getUUID(),0);}
         int count=REQUEST_COUNT.merge(player.getUUID(),1,Integer::sum);
-        if(count>16||!player.isAlive()||player.isSpectator())return;
+        if(count>16||!player.isAlive())return;
+        if(com.cappleapple.mastery.classes.ClassService.pending(player)&&!action.equals("class_select")&&!action.equals("refresh"))return;
+        if(player.isSpectator()&&!action.equals("class_select")&&!action.equals("refresh"))return;
         String error="";
         switch(action) {
+            case "class_select" -> error=com.cappleapple.mastery.classes.ClassService.select(player,id);
             case "editor_get", "editor_save", "editor_delete" -> error=com.cappleapple.mastery.editor.EditorService.handle(player,action,id,value);
             case "purchase" -> {
                 var result=com.cappleapple.mastery.costs.CostService.purchase(definitions,progress(player),id,worldTier(player),

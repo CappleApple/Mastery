@@ -39,6 +39,11 @@ public final class IronSpellsIntegration {
         if(event.getEntity() instanceof ServerPlayer player) {
             if(!com.cappleapple.mastery.mechanics.ProcSpellCaster.casting()) {
             int level=com.cappleapple.mastery.spells.ChargeService.nativeLevel(player,event.getSpellId(),event.getSpellLevel());
+            if(level!=event.getSpellLevel()) {
+                var spell=io.redspace.ironsspellbooks.api.registry.SpellRegistry.getSpell(event.getSpellId());
+                int baseCost=spell.getManaCost(event.getSpellLevel());
+                event.setManaCost(baseCost>0?SpellModifiers.scale(event.getManaCost(),spell.getManaCost(level)/(double)baseCost):spell.getManaCost(level));
+            }
             event.setSpellLevel(level);
             com.cappleapple.mastery.spells.ChargeService.cast(player,event.getSpellId(),level);
             }

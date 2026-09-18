@@ -10,7 +10,7 @@ import java.util.*;
 
 /** Access to every definition kind, including XP rules and reusable effects and requirements. */
 public final class EditorLibraryScreen extends Screen {
-    private static final List<String> KINDS=List.of("trees","nodes","spells","settings","xp_sources","requirements","effects","triggers","keywords","elements","mob_types","weapon_types","contexts","groups");
+    private static final List<String> KINDS=List.of("classes","trees","nodes","spells","settings","xp_sources","requirements","effects","triggers","keywords","elements","mob_types","weapon_types","contexts","groups");
     private final MasteryScreen parent;private String kind="trees",query="";private int page;
     public EditorLibraryScreen(MasteryScreen parent){super(Component.literal("Mastery definitions"));this.parent=parent;}
     @Override protected void init(){
