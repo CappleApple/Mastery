@@ -94,4 +94,4 @@ Java package: `com.cappleapple.mastery`. Output: `build/libs/mastery-1.2.1.jar`.
 
 ## License
 
-All rights reserved; an open-source license has not been selected. See [LICENSE](LICENSE).
+Mastery is licensed under [CC BY-NC-SA 4.0 with a Modpack/Server Exception](LICENSE). Modpacks and Minecraft servers, including monetized ones, may use it under the additional permission in the LICENSE.
