@@ -1,6 +1,6 @@
 modLoader="javafml"
 loaderVersion="[4,)"
-license="All Rights Reserved"
+license="CC BY-NC-SA 4.0 with Modpack/Server Exception"
 
 [[mods]]
 modId="mastery"
